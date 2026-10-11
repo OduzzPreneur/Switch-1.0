@@ -44,6 +44,7 @@ export const registrationSchema = z.object({
     .max(50)
     .transform(sanitizeInput),
   learningMode: z.enum(['Online / Virtual', 'Physical Center / Hybrid']),
+  highestEducation: z.string().optional(),
   trackId: z.string().min(2, 'Please select your preferred track'),
   password: z
     .string()

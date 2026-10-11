@@ -25,6 +25,10 @@ const faqs = [
     a: 'Yes! All 12 tracks are structured with comprehensive foundational modules that transition into intermediate practical projects. Dedicated mentors will guide you step by step.',
   },
   {
+    q: 'Can students currently attending secondary school apply?',
+    a: 'No. Switch 1.0 requires a minimum educational qualification of a Senior Secondary Certificate Examination (SSCE, WAEC, NECO, GCE, or NABTEB). The programme is designed strictly for secondary school leavers, tertiary students, graduates, job seekers, and working professionals.',
+  },
+  {
     q: 'Will I receive a certificate upon completion?',
     a: 'Yes. Every student who completes their track coursework, submits the required capstone/practical project, and passes the final assessment will receive a verified, tamper-proof Switch 1.0 Certificate of Completion.',
   },

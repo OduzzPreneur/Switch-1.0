@@ -39,6 +39,7 @@ function RegisterForm() {
     ageBracket: '21-25',
     gender: 'Male',
     stateOfResidence: 'Lagos',
+    highestEducation: 'SSCE / WAEC / NECO (Secondary School Leaver)',
     learningMode: 'Online / Virtual',
     trackId: TRACKS[0].id,
     password: '',
@@ -397,6 +398,27 @@ function RegisterForm() {
                 {NIGERIAN_STATES.map((st) => (
                   <option key={st} value={st}>{st}</option>
                 ))}
+              </select>
+            </div>
+
+            {/* Highest Educational Qualification (Minimum SSCE) */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase">
+                  Educational Qualification *
+                </label>
+                <span className="text-[10px] text-amber-600 font-bold">Min: SSCE / WAEC</span>
+              </div>
+              <select
+                value={formData.highestEducation}
+                onChange={(e) => setFormData({ ...formData, highestEducation: e.target.value })}
+                className="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-switch-teal"
+              >
+                <option value="SSCE / WAEC / NECO (Secondary School Leaver)">SSCE / WAEC / NECO / GCE (School Leaver)</option>
+                <option value="OND / NCE">OND / NCE</option>
+                <option value="HND / BSc / Bachelor Degree">HND / BSc / Bachelor&apos;s Degree</option>
+                <option value="Postgraduate / Master Degree">Postgraduate / Master&apos;s Degree</option>
+                <option value="Other Tertiary Qualification">Other Tertiary Qualification</option>
               </select>
             </div>
 

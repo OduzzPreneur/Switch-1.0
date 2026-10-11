@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import PartnerHeader from '@/components/layout/PartnerHeader';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 
@@ -33,9 +32,6 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body className="min-h-screen flex flex-col bg-slate-50 antialiased selection:bg-switch-teal selection:text-white">
-        {/* Top Header: Strictly Partner Logos */}
-        <PartnerHeader />
-
         {/* Global Navigation Header */}
         <Navbar />
 

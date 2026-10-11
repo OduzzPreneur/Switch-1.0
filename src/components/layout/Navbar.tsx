@@ -19,79 +19,105 @@ export default function Navbar() {
   const pathname = usePathname();
 
   return (
-    <nav className="bg-switch-dark text-white border-b border-white/10 sticky top-0 z-40 shadow-md">
+    <nav className="bg-switch-dark text-white border-b border-white/10 sticky top-0 z-50 shadow-md backdrop-blur-md bg-switch-dark/95">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14">
+        <div className="flex items-center justify-between h-16 sm:h-[72px]">
           
-          {/* Left: Brand Logo & Desktop Navigation Links */}
-          <div className="hidden md:flex items-center space-x-4 lg:space-x-6">
-            <Link href="/" className="flex items-center gap-2 group mr-2">
-              <div className="relative w-8 h-8 rounded-lg overflow-hidden bg-white p-0.5 border border-white/20 shadow-xs">
+          {/* Professional Brand & Partner Logo Cluster */}
+          <div className="flex items-center gap-3 sm:gap-4">
+            <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group">
+              {/* Switch Brand Logo Container */}
+              <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden bg-white p-1 border border-white/20 shadow-sm group-hover:scale-105 transition-transform">
                 <Image
                   src="/logos/switch-logo.jpg"
                   alt="The Switch"
                   fill
-                  sizes="32px"
-                  className="object-contain group-hover:scale-105 transition-transform"
+                  sizes="44px"
+                  className="object-contain"
+                  priority
                 />
               </div>
-              <span className="font-black text-sm tracking-tight text-white hidden xl:inline">
-                SWITCH <span className="text-switch-orange text-xs">1.0</span>
-              </span>
+
+              {/* Typography Wordmark */}
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-black text-base sm:text-lg tracking-tight text-white leading-none">
+                    THE SWITCH
+                  </span>
+                  <span className="bg-switch-orange text-white text-[10px] sm:text-[11px] font-extrabold px-1.5 py-0.5 rounded shadow-2xs font-mono">
+                    1.0
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-400 font-medium tracking-wide hidden sm:block mt-0.5">
+                  Youth Empowerment
+                </span>
+              </div>
             </Link>
 
-            <div className="flex items-center space-x-1 lg:space-x-2">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs lg:text-sm font-semibold transition-all ${
-                      isActive
-                        ? 'bg-switch-teal text-white shadow-sm'
-                        : 'text-slate-300 hover:text-white hover:bg-white/10'
-                    }`}
-                  >
-                    <Icon className="w-3.5 h-3.5 text-switch-orange" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
+            {/* Subtle Vertical Divider */}
+            <div className="h-6 w-[1px] bg-white/20 hidden xs:block" />
+
+            {/* Partner Logo (GOFAMINT Youth Fellowship) */}
+            <div className="hidden xs:flex items-center gap-2" title="In partnership with GOFAMINT Youth Fellowship (GYF)">
+              <div className="relative w-8 h-8 rounded-full overflow-hidden bg-white p-0.5 border border-white/20 shadow-xs">
+                <Image
+                  src="/logos/gofamint-logo.jpg"
+                  alt="GOFAMINT Youth Fellowship"
+                  fill
+                  sizes="32px"
+                  className="object-contain"
+                />
+              </div>
+              <span className="text-[11px] text-slate-300 font-semibold hidden lg:inline">
+                GOFAMINT GYF
+              </span>
             </div>
           </div>
 
-          {/* Right: Register Button on Desktop */}
+          {/* Desktop Navigation Links */}
+          <div className="hidden md:flex items-center space-x-1 lg:space-x-2">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs lg:text-sm font-semibold transition-all ${
+                    isActive
+                      ? 'bg-switch-teal text-white shadow-sm'
+                      : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5 text-switch-orange" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Right Action: Register CTA */}
           <div className="hidden md:flex items-center gap-3">
             <Link
               href="/register"
-              className="inline-flex items-center gap-1.5 bg-switch-orange hover:bg-switch-orange-600 text-white text-xs lg:text-sm font-bold px-4 py-2 rounded-lg transition-colors shadow-sm"
+              className="inline-flex items-center gap-1.5 bg-gradient-to-r from-switch-orange to-orange-500 hover:from-switch-orange-600 hover:to-orange-600 text-white text-xs lg:text-sm font-bold px-4 py-2.5 rounded-xl transition-all shadow-md shadow-orange-500/20 transform hover:-translate-y-0.5"
             >
               <span>Register</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          {/* Mobile Menu Header */}
-          <div className="flex md:hidden items-center justify-between w-full">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="relative w-7 h-7 rounded-lg overflow-hidden bg-white p-0.5 border border-white/20">
-                <Image
-                  src="/logos/switch-logo.jpg"
-                  alt="The Switch"
-                  fill
-                  sizes="28px"
-                  className="object-contain"
-                />
-              </div>
-              <span className="text-xs font-black tracking-wider text-white uppercase">
-                SWITCH 1.0
-              </span>
+          {/* Mobile Menu Trigger */}
+          <div className="flex md:hidden items-center gap-2">
+            <Link
+              href="/register"
+              className="bg-switch-orange text-white text-xs font-bold px-3 py-1.5 rounded-lg"
+            >
+              Register
             </Link>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 focus:outline-none"
+              className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 focus:outline-none"
               aria-label="Toggle Navigation Menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -103,7 +129,7 @@ export default function Navbar() {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-switch-dark border-b border-white/10 px-4 pt-2 pb-4 space-y-1">
+        <div className="md:hidden bg-switch-dark border-b border-white/10 px-4 pt-2 pb-5 space-y-1.5 shadow-xl">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -112,7 +138,7 @@ export default function Navbar() {
                 key={item.label}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
                     ? 'bg-switch-teal text-white font-semibold'
                     : 'text-slate-300 hover:text-white hover:bg-white/10'
@@ -127,9 +153,9 @@ export default function Navbar() {
             <Link
               href="/register"
               onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-center block bg-switch-orange hover:bg-switch-orange-600 text-white font-bold py-2.5 rounded-lg text-sm transition-colors"
+              className="w-full text-center block bg-switch-orange hover:bg-switch-orange-600 text-white font-bold py-2.5 rounded-xl text-sm transition-colors shadow-sm"
             >
-              Register Now
+              Register for Cohort 1.0
             </Link>
           </div>
         </div>
