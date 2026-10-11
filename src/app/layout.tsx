@@ -1,14 +1,13 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import PartnerHeader from '@/components/layout/PartnerHeader';
-import AnnouncementBanner from '@/components/layout/AnnouncementBanner';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
   title: 'Switch 1.0 | Youth Tech & Vocational Empowerment Platform',
   description:
-    'Switch 1.0 is an intensive youth empowerment initiative (Ages 15–40) featuring 12 tech and vocational tracks. Subsidized by GOFAMINT Youth Fellowship (GYF - Strong & Able). Registration token fee: ₦5,000.',
+    'Switch 1.0 is an intensive youth empowerment initiative (Ages 15–40) featuring 12 tech and vocational tracks. Subsidized in partnership with GOFAMINT Youth Fellowship.',
   keywords: [
     'Switch 1.0',
     'GOFAMINT Youth Fellowship',
@@ -34,11 +33,8 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body className="min-h-screen flex flex-col bg-slate-50 antialiased selection:bg-switch-teal selection:text-white">
-        {/* Institutional Partner Banner (3MTT/RAIN Inspired) */}
+        {/* Top Header: Strictly Partner Logos */}
         <PartnerHeader />
-
-        {/* Dynamic Broadcast Announcement Banner */}
-        <AnnouncementBanner />
 
         {/* Global Navigation Header */}
         <Navbar />

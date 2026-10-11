@@ -95,17 +95,12 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/login" className="hover:text-white transition-colors">
-                  Student Portal Login
+                  Portal Login
                 </Link>
               </li>
               <li>
                 <Link href="/#eligibility" className="hover:text-white transition-colors">
                   Eligibility Criteria (15–40 yrs)
-                </Link>
-              </li>
-              <li>
-                <Link href="/#token-fee" className="hover:text-white transition-colors">
-                  Token Fee Breakdown
                 </Link>
               </li>
               <li>

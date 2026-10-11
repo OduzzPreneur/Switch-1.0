@@ -3,10 +3,6 @@ import { TOKEN_AMOUNT_KOBO, TOKEN_CURRENCY } from './security';
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || '';
 export const PAYSTACK_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
 
-export const isPaystackConfigured = Boolean(
-  PAYSTACK_SECRET_KEY && !PAYSTACK_SECRET_KEY.includes('placeholder')
-);
-
 export interface PaystackInitResponse {
   status: boolean;
   message: string;
@@ -36,7 +32,7 @@ export interface PaystackVerifyResponse {
   };
 }
 
-// Initialize payment on Paystack
+// Initialize payment directly on Paystack Gateway
 export async function initializePaystackPayment(params: {
   email: string;
   amountKobo?: number;
@@ -46,17 +42,8 @@ export async function initializePaystackPayment(params: {
 }): Promise<PaystackInitResponse> {
   const amount = params.amountKobo || TOKEN_AMOUNT_KOBO;
 
-  if (!isPaystackConfigured) {
-    // Demonstration / Mock Mode when Paystack credentials are not yet supplied
-    return {
-      status: true,
-      message: 'Demo transaction initialized (Mock Mode)',
-      data: {
-        authorization_url: `${params.callbackUrl}?reference=${params.reference}&mock=true`,
-        access_code: `mock_code_${Date.now()}`,
-        reference: params.reference,
-      },
-    };
+  if (!PAYSTACK_SECRET_KEY) {
+    throw new Error('Paystack secret key is not configured. Please set PAYSTACK_SECRET_KEY in your environment variables.');
   }
 
   const response = await fetch('https://api.paystack.co/transaction/initialize', {
@@ -87,24 +74,8 @@ export async function initializePaystackPayment(params: {
 export async function verifyPaystackPayment(
   reference: string
 ): Promise<PaystackVerifyResponse> {
-  if (!isPaystackConfigured) {
-    // Demo / mock verification for development
-    return {
-      status: true,
-      message: 'Verification successful (Demo Mode)',
-      data: {
-        id: Math.floor(Math.random() * 900000) + 100000,
-        status: 'success',
-        reference,
-        amount: TOKEN_AMOUNT_KOBO,
-        currency: TOKEN_CURRENCY,
-        paid_at: new Date().toISOString(),
-        channel: 'card',
-        customer: {
-          email: 'student@switchportal.org',
-        },
-      },
-    };
+  if (!PAYSTACK_SECRET_KEY) {
+    throw new Error('Paystack secret key is not configured. Please set PAYSTACK_SECRET_KEY in your environment variables.');
   }
 
   const response = await fetch(

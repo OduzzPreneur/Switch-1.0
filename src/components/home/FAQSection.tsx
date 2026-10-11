@@ -9,16 +9,16 @@ const faqs = [
     a: 'Switch 1.0 is an intensive youth empowerment initiative designed to equip participants aged 15–40 with high-income tech skills and vital vocational trades. It is powered by The Switch in strategic partnership with GOFAMINT Youth Fellowship (GYF - Strong & Able) and technical industry stakeholders.',
   },
   {
-    q: 'Why is there a registration token of ₦5,000?',
-    a: 'The full commercial value of each track ranges between ₦150,000 and ₦350,000. Through co-sponsorship by GOFAMINT Youth Fellowship and corporate partners, 90%+ is subsidized. The ₦5,000 token is a commitment fee ensuring that enrolled students take their coursework seriously, while covering platform access and digital certification processing.',
+    q: 'What is the registration fee for Switch 1.0?',
+    a: 'The registration fee is ₦5,000, paid online via Paystack upon submitting your registration. This covers onboarding, course materials, and certification processing.',
   },
   {
     q: 'How will lectures and practicals be conducted (Online or In-Person)?',
-    a: 'As announced, specific training center allocations (physical centers across designated GOFAMINT regional hubs) and virtual streaming schedules will be published in the Student Portal and through official platform announcements prior to orientation.',
+    a: 'As announced, specific training center allocations and virtual streaming schedules will be published in the Student Portal prior to orientation.',
   },
   {
-    q: 'How do I pay the ₦5,000 token fee?',
-    a: 'Payment is made securely through Paystack on the registration page. You can pay using your Nigerian debit card, bank transfer, or USSD. Once verified, your registration number and student portal access are generated immediately.',
+    q: 'How do I pay the registration fee?',
+    a: 'Payment is processed securely through Paystack on the registration page. You can pay using your debit card, bank transfer, or USSD. Upon payment verification, your registration number and portal access are generated immediately.',
   },
   {
     q: 'Can I apply if I am a complete beginner with no prior experience?',

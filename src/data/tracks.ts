@@ -235,7 +235,7 @@ export const ANNOUNCEMENTS: import('@/types').AnnouncementItem[] = [
     category: 'Cohort Update',
     date: 'Current Session',
     summary:
-      'Registration for Switch 1.0 is currently live. Secure your slot in any of the 12 Tech & Vocational tracks with the subsidized token fee of ₦5,000.',
+      'Registration for Switch 1.0 is currently live. Secure your slot in any of the 12 Tech & Vocational tracks.',
     actionLabel: 'Register Now',
     actionUrl: '/register',
     isUrgent: true,
@@ -250,10 +250,10 @@ export const ANNOUNCEMENTS: import('@/types').AnnouncementItem[] = [
   },
   {
     id: 'ann-3',
-    title: 'Partner Empowerment Subsidy Confirmation',
+    title: 'Empowerment Partnership Confirmation',
     category: 'General',
     date: 'Active',
     summary:
-      'Through partnerships with GOFAMINT Youth Fellowship (GYF) and technical stakeholders, 90% of your training cost is fully subsidized, leaving only the ₦5,000 token fee.',
+      'Switch 1.0 is organized in strategic partnership with GOFAMINT Youth Fellowship (GYF) and technical stakeholders to empower youth with high-income skills.',
   },
 ];

@@ -27,17 +27,8 @@ export default function StudentDashboardPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'overview' | 'curriculum' | 'schedule' | 'resources'>('overview');
   
-  // Simulated or stored student profile
-  const [student, setStudent] = useState<any>({
-    fullName: 'Tobi Isaac Odubona',
-    email: 'tobi.isaac@example.com',
-    trackId: 'software-engineering',
-    registrationNumber: 'SW1-2026-48912',
-    learningMode: 'Online / Virtual',
-    paymentStatus: 'verified',
-    amountPaid: 5000,
-    enrolledAt: 'Cohort 1.0 (Active)',
-  });
+  const [student, setStudent] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Check if session exists in localStorage
@@ -46,19 +37,18 @@ export default function StudentDashboardPage() {
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          setStudent((prev: any) => ({
-            ...prev,
-            ...parsed,
-            registrationNumber: parsed.registrationNumber || prev.registrationNumber,
-          }));
+          setStudent(parsed);
+          setLoading(false);
+          return;
         } catch (e) {
           console.error(e);
         }
       }
     }
-  }, []);
 
-  const enrolledTrack = TRACKS.find((t) => t.id === student.trackId) || TRACKS[0];
+    // If no student session found, redirect to login
+    router.push('/login');
+  }, [router]);
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
@@ -66,6 +56,19 @@ export default function StudentDashboardPage() {
     }
     router.push('/login');
   };
+
+  if (loading || !student) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center bg-slate-50">
+        <div className="text-center space-y-3">
+          <div className="w-8 h-8 border-2 border-switch-teal border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs text-slate-500 font-semibold">Loading student portal...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const enrolledTrack = TRACKS.find((t) => t.id === student?.trackId) || TRACKS[0];
 
   return (
     <div className="min-h-screen bg-slate-100/70 pb-20">
@@ -293,9 +296,9 @@ export default function StudentDashboardPage() {
 
                 <div className="space-y-2.5 text-xs">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Commitment Token:</span>
+                    <span className="text-slate-500">Registration Fee:</span>
                     <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                      ₦5,000 Paid (Confirmed)
+                      ₦5,000 (Verified)
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -336,7 +339,7 @@ export default function StudentDashboardPage() {
                   GOFAMINT Youth Fellowship (GYF)
                 </h4>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Your registration token of ₦5,000 is heavily co-sponsored to empower you with industry-grade capacity and economic independence.
+                  Equipping you with industry-grade capacity and economic independence in partnership with GOFAMINT Youth Fellowship.
                 </p>
                 <div className="text-[10px] text-emerald-300 font-bold">
                   • GYF: Strong & Able

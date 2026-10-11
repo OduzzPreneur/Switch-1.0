@@ -16,7 +16,6 @@ import {
   BookOpen,
   Sparkles,
   AlertCircle,
-  Clock,
   Printer,
 } from 'lucide-react';
 
@@ -55,6 +54,12 @@ function RegisterForm() {
     if (trackParam && TRACKS.some((t) => t.id === trackParam)) {
       setFormData((prev) => ({ ...prev, trackId: trackParam }));
     }
+
+    // Auto-verify if returning from Paystack redirect
+    const reference = searchParams.get('reference') || searchParams.get('trxref');
+    if (reference) {
+      verifyAndCompleteRegistration(reference);
+    }
   }, [searchParams]);
 
   const selectedTrack = TRACKS.find((t) => t.id === formData.trackId) || TRACKS[0];
@@ -68,15 +73,15 @@ function RegisterForm() {
       return;
     }
     if (!formData.email.trim() || !formData.email.includes('@')) {
-      setErrorMsg('Please provide a valid email address for your student portal.');
+      setErrorMsg('Please provide a valid email address.');
       return;
     }
     if (!formData.phone.trim() || formData.phone.length < 10) {
-      setErrorMsg('Please provide a valid phone number for SMS cohort updates.');
+      setErrorMsg('Please provide a valid phone number.');
       return;
     }
     if (!formData.password || formData.password.length < 6) {
-      setErrorMsg('Please choose a password with at least 6 characters for your portal.');
+      setErrorMsg('Please choose a password with at least 6 characters.');
       return;
     }
 
@@ -95,7 +100,6 @@ function RegisterForm() {
     setErrorMsg(null);
 
     try {
-      // 1. Send registration payload to server route
       const res = await fetch('/api/payment/initialize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -111,12 +115,12 @@ function RegisterForm() {
         throw new Error(data.message || 'Payment initialization failed. Please try again.');
       }
 
-      // 2. If mock/demo mode or direct callback
-      if (data.mock || data.data?.authorization_url?.includes('mock=true')) {
-        // Complete mock registration directly
-        await verifyAndCompleteRegistration(data.reference || `MOCK_REF_${Date.now()}`);
-      } else if (data.data?.authorization_url) {
-        // Redirect to real Paystack gateway
+      if (data.data?.authorization_url) {
+        // Save current form state to recover after redirect
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('switch_pending_registration', JSON.stringify(formData));
+        }
+        // Redirect to Paystack secure checkout
         window.location.href = data.data.authorization_url;
       } else {
         throw new Error('Unable to retrieve payment checkout window.');
@@ -128,28 +132,41 @@ function RegisterForm() {
   };
 
   const verifyAndCompleteRegistration = async (reference: string) => {
+    setIsSubmitting(true);
     try {
+      let pendingData = formData;
+      if (typeof window !== 'undefined') {
+        const storedPending = sessionStorage.getItem('switch_pending_registration');
+        if (storedPending) {
+          try {
+            pendingData = JSON.parse(storedPending);
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+
       const verifyRes = await fetch('/api/payment/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           reference,
-          studentData: formData,
+          studentData: pendingData,
         }),
       });
 
       const verifyData = await verifyRes.json();
 
       if (!verifyRes.ok || !verifyData.success) {
-        throw new Error(verifyData.message || 'Verification could not be finalized.');
+        throw new Error(verifyData.message || 'Payment verification could not be finalized.');
       }
 
-      // Save student profile to local storage for portal session demonstration
       if (typeof window !== 'undefined') {
         localStorage.setItem(
           'switch_student_session',
           JSON.stringify(verifyData.registration)
         );
+        sessionStorage.removeItem('switch_pending_registration');
       }
 
       setRegistrationSuccess(verifyData.registration);
@@ -171,14 +188,14 @@ function RegisterForm() {
 
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200 mb-3">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            Token Verified & Slot Confirmed
+            Registration Confirmed
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-black text-switch-dark">
-            Welcome to Switch 1.0!
+            Registration Successful
           </h2>
           <p className="text-slate-600 text-sm mt-2 max-w-md mx-auto">
-            Your registration fee of <strong>₦{TOKEN_AMOUNT_NGN.toLocaleString()}</strong> has been securely confirmed. Your student record has been generated.
+            Your registration fee has been received and verified. Your student record has been generated.
           </p>
 
           {/* Receipt Breakdown Card */}
@@ -196,11 +213,7 @@ function RegisterForm() {
               <span className="font-bold text-slate-800">{selectedTrack.title}</span>
             </div>
             <div className="flex justify-between border-b border-slate-200 pb-2">
-              <span className="text-slate-500">Category:</span>
-              <span className="font-bold text-slate-800">{selectedTrack.category}</span>
-            </div>
-            <div className="flex justify-between border-b border-slate-200 pb-2">
-              <span className="text-slate-500">Amount Paid:</span>
+              <span className="text-slate-500">Fee Paid:</span>
               <span className="font-bold text-emerald-600">₦{TOKEN_AMOUNT_NGN.toLocaleString()} (Verified)</span>
             </div>
             <div className="flex justify-between pt-1">
@@ -239,10 +252,10 @@ function RegisterForm() {
           Cohort 1.0 Enrollment
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-switch-dark tracking-tight">
-          Student Onboarding & Registration
+          Student Registration
         </h1>
         <p className="mt-2 text-slate-600 text-sm sm:text-base max-w-xl mx-auto">
-          Complete your profile, choose your track from the 12 disciplines, and finalize your subsidized <strong>₦5,000</strong> token payment.
+          Complete your profile, choose your track from the 12 disciplines, and finalize your registration.
         </p>
 
         {/* Step Indicator */}
@@ -259,7 +272,7 @@ function RegisterForm() {
           <div className="w-8 h-[2px] bg-slate-200" />
           <div className={`flex items-center gap-2 text-xs font-bold ${step === 3 ? 'text-switch-teal' : 'text-slate-400'}`}>
             <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${step === 3 ? 'bg-switch-teal text-white' : 'bg-slate-200'}`}>3</span>
-            <span>Token Payment</span>
+            <span>Payment</span>
           </div>
         </div>
       </div>
@@ -269,7 +282,7 @@ function RegisterForm() {
         <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs sm:text-sm flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
           <div>
-            <strong className="font-bold">Registration Alert: </strong>
+            <strong className="font-bold">Notice: </strong>
             <span>{errorMsg}</span>
           </div>
         </div>
@@ -297,7 +310,7 @@ function RegisterForm() {
               <input
                 type="text"
                 required
-                placeholder="e.g. Tobi Isaac Odubona"
+                placeholder="e.g. Tobi Isaac"
                 value={formData.fullName}
                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                 className="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-switch-teal"
@@ -312,7 +325,7 @@ function RegisterForm() {
               <input
                 type="email"
                 required
-                placeholder="e.g. tobi@example.com"
+                placeholder="your.email@example.com"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-switch-teal"
@@ -322,12 +335,12 @@ function RegisterForm() {
             {/* Phone */}
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
-                Phone Number (WhatsApp Active) *
+                Phone Number *
               </label>
               <input
                 type="tel"
                 required
-                placeholder="e.g. 08012345678"
+                placeholder="08012345678"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 className="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-switch-teal"
@@ -424,7 +437,7 @@ function RegisterForm() {
               <span>Step 2: Choose Your Track</span>
             </h2>
             <p className="text-xs text-slate-500 mt-1">
-              Select one of the 12 Tech & Vocational disciplines for Switch 1.0 Cohort.
+              Select one of the 12 Tech & Vocational disciplines.
             </p>
           </div>
 
@@ -502,9 +515,6 @@ function RegisterForm() {
                 <span className="text-xs">Physical Center / Hybrid Sessions</span>
               </label>
             </div>
-            <p className="text-[11px] text-slate-500 mt-2">
-              Note: Specific physical venue allocations will be communicated via official announcements.
-            </p>
           </div>
 
           <div className="pt-4 flex items-center justify-between">
@@ -521,23 +531,23 @@ function RegisterForm() {
               type="submit"
               className="inline-flex items-center gap-2 bg-switch-teal hover:bg-switch-teal-700 text-white font-bold px-7 py-3 rounded-xl text-sm transition-all shadow"
             >
-              <span>Continue to Token Payment</span>
+              <span>Continue to Payment</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </form>
       )}
 
-      {/* Step 3: Token Fee & Paystack Checkout */}
+      {/* Step 3: Payment */}
       {step === 3 && (
         <div className="bg-white rounded-3xl border border-slate-200 shadow-xl p-6 sm:p-10 space-y-6">
           <div className="border-b border-slate-100 pb-4">
             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-switch-orange" />
-              <span>Step 3: Registration Token Payment</span>
+              <span>Step 3: Registration Payment</span>
             </h2>
             <p className="text-xs text-slate-500 mt-1">
-              Finalize your student registration with the subsidized token fee of <strong>₦{TOKEN_AMOUNT_NGN.toLocaleString()}</strong>.
+              Finalize your student registration fee of <strong>₦{TOKEN_AMOUNT_NGN.toLocaleString()}</strong>.
             </p>
           </div>
 
@@ -555,25 +565,16 @@ function RegisterForm() {
               <span className="text-slate-500">Delivery Mode:</span>
               <span className="font-bold text-slate-800">{formData.learningMode}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Commercial Tuition Value:</span>
-              <span className="line-through text-slate-400">₦185,000</span>
-            </div>
             <div className="flex justify-between border-t border-slate-200 pt-2 text-sm">
-              <span className="font-bold text-slate-900">Commitment Token Due:</span>
-              <span className="font-extrabold text-switch-orange">₦{TOKEN_AMOUNT_NGN.toLocaleString()}</span>
+              <span className="font-bold text-slate-900">Registration Fee:</span>
+              <span className="font-extrabold text-switch-teal">₦{TOKEN_AMOUNT_NGN.toLocaleString()}</span>
             </div>
           </div>
 
-          {/* Security & Partner reassurance */}
-          <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-900 space-y-1">
-            <div className="flex items-center gap-2 font-bold text-emerald-800">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>Partner Empowerment Guarantee</span>
-            </div>
-            <p className="text-[11px] text-emerald-700">
-              Subsidized by GOFAMINT Youth Fellowship (GYF - Strong & Able). Paystack handles checkout with 256-bit bank grade encryption.
-            </p>
+          {/* Payment Security */}
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-700 flex items-center gap-3">
+            <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+            <span>Payments are securely processed via Paystack. Supports Debit Card, Bank Transfer, and USSD.</span>
           </div>
 
           <div className="pt-4 flex items-center justify-between">
@@ -591,14 +592,14 @@ function RegisterForm() {
               type="button"
               onClick={handlePayment}
               disabled={isSubmitting}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-switch-orange to-orange-500 hover:from-switch-orange-600 hover:to-orange-600 text-white font-bold px-8 py-3.5 rounded-xl text-sm transition-all shadow-lg shadow-orange-500/25 disabled:opacity-60"
+              className="inline-flex items-center gap-2 bg-switch-orange hover:bg-switch-orange-600 text-white font-bold px-8 py-3.5 rounded-xl text-sm transition-all shadow-md disabled:opacity-60"
             >
               {isSubmitting ? (
-                <span>Verifying with Paystack...</span>
+                <span>Processing...</span>
               ) : (
                 <>
                   <Lock className="w-4 h-4" />
-                  <span>Pay ₦{TOKEN_AMOUNT_NGN.toLocaleString()} with Paystack</span>
+                  <span>Pay ₦{TOKEN_AMOUNT_NGN.toLocaleString()} via Paystack</span>
                 </>
               )}
             </button>
@@ -608,9 +609,9 @@ function RegisterForm() {
 
       {/* Login link */}
       <div className="text-center mt-6 text-xs text-slate-500">
-        Already registered and paid?{' '}
+        Already registered?{' '}
         <Link href="/login" className="font-bold text-switch-teal hover:underline">
-          Sign into your Student Portal here
+          Portal Login
         </Link>
       </div>
     </div>
@@ -619,7 +620,7 @@ function RegisterForm() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div className="p-12 text-center text-slate-500">Loading enrollment form...</div>}>
+    <Suspense fallback={<div className="p-12 text-center text-slate-500">Loading registration form...</div>}>
       <RegisterForm />
     </Suspense>
   );

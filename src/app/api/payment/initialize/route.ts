@@ -50,7 +50,6 @@ export async function POST(req: NextRequest) {
       success: true,
       reference,
       data: paystackResult.data,
-      mock: !process.env.PAYSTACK_SECRET_KEY,
     });
   } catch (error: any) {
     console.error('Error in payment initialization:', error);

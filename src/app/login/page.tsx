@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
-import { Lock, Mail, ArrowRight, ShieldCheck, AlertCircle, Sparkles } from 'lucide-react';
+import { Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function LoginPage() {
     try {
       if (isSupabaseConfigured && supabase) {
         const { data, error } = await supabase.auth.signInWithPassword({
-          email,
+          email: email.trim().toLowerCase(),
           password,
         });
 
@@ -29,35 +29,23 @@ export default function LoginPage() {
           throw error;
         }
 
-        // Successfully signed in via Supabase
         router.push('/dashboard');
-      } else {
-        // Fallback / Demonstration mode when Supabase credentials are pending
-        if (typeof window !== 'undefined') {
-          const stored = localStorage.getItem('switch_student_session');
-          if (stored) {
-            const parsed = JSON.parse(stored);
-            if (parsed.email && parsed.email.toLowerCase() === email.toLowerCase()) {
-              router.push('/dashboard');
-              return;
-            }
-          }
-
-          // Allow standard demo entry
-          localStorage.setItem(
-            'switch_student_session',
-            JSON.stringify({
-              fullName: email.split('@')[0].toUpperCase(),
-              email,
-              trackId: 'software-engineering',
-              registrationNumber: 'SW1-2026-92144',
-              paymentStatus: 'verified',
-              amountPaid: 5000,
-            })
-          );
-        }
-        router.push('/dashboard');
+        return;
       }
+
+      // Check for locally registered student record
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('switch_student_session');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.email && parsed.email.toLowerCase() === email.trim().toLowerCase()) {
+            router.push('/dashboard');
+            return;
+          }
+        }
+      }
+
+      throw new Error('Invalid email or password. Please verify your credentials or register first.');
     } catch (err: any) {
       setErrorMsg(err.message || 'Unable to sign in. Please check your credentials.');
       setLoading(false);
@@ -68,7 +56,7 @@ export default function LoginPage() {
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-16 bg-slate-50">
       <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200 shadow-xl p-8 sm:p-10 relative overflow-hidden">
         
-        {/* Subtle top brand accent */}
+        {/* Top brand accent */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-switch-teal via-switch-orange to-amber-500" />
 
         <div className="text-center mb-8">
@@ -76,10 +64,10 @@ export default function LoginPage() {
             <Lock className="w-6 h-6 text-switch-teal" />
           </div>
           <h1 className="text-2xl font-black text-switch-dark tracking-tight">
-            Student Portal Sign In
+            Portal Login
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Access your Switch 1.0 curriculum, timetable, and verified token status.
+            Sign in to access your Switch 1.0 curriculum, timetable, and registration record.
           </p>
         </div>
 
@@ -152,7 +140,7 @@ export default function LoginPage() {
         <div className="mt-6 pt-6 border-t border-slate-100 text-center text-xs text-slate-500">
           Not yet registered for Switch 1.0?{' '}
           <Link href="/register" className="font-bold text-switch-orange hover:underline">
-            Register & Pay ₦5,000 Token
+            Register Here
           </Link>
         </div>
 

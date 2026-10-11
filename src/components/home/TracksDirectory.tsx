@@ -173,12 +173,11 @@ export default function TracksDirectory() {
 
               </div>
 
-              {/* Card Footer CTA */}
               <div className="p-4 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-slate-500 block uppercase font-medium">Fee</span>
+                  <span className="text-[10px] text-slate-500 block uppercase font-medium">Registration</span>
                   <span className="text-sm font-extrabold text-switch-teal">
-                    ₦5,000 <span className="text-[10px] font-normal text-slate-500">(Token)</span>
+                    ₦5,000
                   </span>
                 </div>
 
