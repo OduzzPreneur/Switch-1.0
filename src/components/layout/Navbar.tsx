@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Menu, X, Compass, Layers, ShieldCheck, HelpCircle, LogIn, ArrowRight } from 'lucide-react';
 
@@ -22,26 +23,43 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
           
-          {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center space-x-1 lg:space-x-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs lg:text-sm font-semibold transition-all ${
-                    isActive
-                      ? 'bg-switch-teal text-white shadow-sm'
-                      : 'text-slate-300 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  <Icon className="w-4 h-4 text-switch-orange" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
+          {/* Left: Brand Logo & Desktop Navigation Links */}
+          <div className="hidden md:flex items-center space-x-4 lg:space-x-6">
+            <Link href="/" className="flex items-center gap-2 group mr-2">
+              <div className="relative w-8 h-8 rounded-lg overflow-hidden bg-white p-0.5 border border-white/20 shadow-xs">
+                <Image
+                  src="/logos/switch-logo.jpg"
+                  alt="The Switch"
+                  fill
+                  sizes="32px"
+                  className="object-contain group-hover:scale-105 transition-transform"
+                />
+              </div>
+              <span className="font-black text-sm tracking-tight text-white hidden xl:inline">
+                SWITCH <span className="text-switch-orange text-xs">1.0</span>
+              </span>
+            </Link>
+
+            <div className="flex items-center space-x-1 lg:space-x-2">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs lg:text-sm font-semibold transition-all ${
+                      isActive
+                        ? 'bg-switch-teal text-white shadow-sm'
+                        : 'text-slate-300 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5 text-switch-orange" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
 
           {/* Right: Register Button on Desktop */}
@@ -55,11 +73,22 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Header */}
           <div className="flex md:hidden items-center justify-between w-full">
-            <span className="text-xs font-bold tracking-wider text-slate-200 uppercase">
-              Switch 1.0 Menu
-            </span>
+            <Link href="/" className="flex items-center gap-2">
+              <div className="relative w-7 h-7 rounded-lg overflow-hidden bg-white p-0.5 border border-white/20">
+                <Image
+                  src="/logos/switch-logo.jpg"
+                  alt="The Switch"
+                  fill
+                  sizes="28px"
+                  className="object-contain"
+                />
+              </div>
+              <span className="text-xs font-black tracking-wider text-white uppercase">
+                SWITCH 1.0
+              </span>
+            </Link>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 focus:outline-none"

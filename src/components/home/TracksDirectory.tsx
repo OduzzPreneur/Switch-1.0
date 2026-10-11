@@ -122,10 +122,10 @@ export default function TracksDirectory() {
                   </span>
                 </div>
 
-                <h3 className="text-xl font-bold text-slate-900 group-hover:text-switch-teal transition-colors line-clamp-1">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 group-hover:text-switch-teal transition-colors min-h-[3.25rem] flex items-center leading-snug">
                   {track.title}
                 </h3>
-                <p className="mt-1.5 text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                <p className="mt-1.5 text-xs text-slate-600 line-clamp-2 leading-relaxed min-h-[2rem]">
                   {track.tagline}
                 </p>
               </div>
@@ -156,7 +156,7 @@ export default function TracksDirectory() {
                   <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
                     Tools & Equipment
                   </div>
-                  <p className="text-xs text-slate-600 font-medium line-clamp-1">
+                  <p className="text-xs text-slate-600 font-medium line-clamp-2 min-h-[2rem] leading-relaxed">
                     {track.toolsCovered.join(' · ')}
                   </p>
                 </div>
@@ -166,7 +166,7 @@ export default function TracksDirectory() {
                   <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                     Career Opportunities
                   </div>
-                  <p className="text-xs text-slate-700 font-semibold line-clamp-1">
+                  <p className="text-xs text-slate-700 font-semibold line-clamp-2 min-h-[2rem] leading-relaxed">
                     {track.careerRoles.join(' · ')}
                   </p>
                 </div>
@@ -183,7 +183,7 @@ export default function TracksDirectory() {
 
                 <Link
                   href={`/register?track=${track.id}`}
-                  className="inline-flex items-center gap-1.5 bg-switch-teal group-hover:bg-switch-orange text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-colors shadow-sm"
+                  className="inline-flex items-center gap-1.5 bg-switch-teal hover:bg-switch-orange text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm"
                 >
                   <span>Select Track</span>
                   <ArrowRight className="w-3.5 h-3.5" />
