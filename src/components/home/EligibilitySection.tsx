@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { UserCheck, Calendar, GraduationCap, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
+import { UserCheck, Calendar, GraduationCap, CheckCircle2, ArrowRight } from 'lucide-react';
 
 export default function EligibilitySection() {
   const criteria = [
@@ -43,15 +43,6 @@ export default function EligibilitySection() {
           <p className="mt-3 text-slate-600 text-base">
             Please review the admission prerequisites below before submitting your registration.
           </p>
-        </div>
-
-        {/* Highlight Banner on Secondary School Policy */}
-        <div className="max-w-4xl mx-auto mb-10 bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5 flex items-start gap-3.5 shadow-2xs">
-          <AlertCircle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
-          <div className="text-xs sm:text-sm text-amber-900 leading-relaxed">
-            <strong className="font-bold">Important Admission Policy: </strong>
-            Switch 1.0 requires a minimum educational qualification of a Secondary School Certificate (SSCE/WAEC/NECO). <strong>This programme is strictly for secondary school leavers and above; students currently attending secondary school are NOT eligible.</strong>
-          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
