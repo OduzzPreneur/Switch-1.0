@@ -23,8 +23,8 @@ export default function HeroSection() {
             </span>
           </h1>
 
-          <p className="text-slate-300 text-base sm:text-lg lg:text-xl max-w-3xl mx-auto font-normal leading-relaxed">
-            An intensive empowerment program designed to train ambitious youth and young adults across 12 practical disciplines for real-world employment and entrepreneurship.
+          <p className="text-slate-300 text-base sm:text-lg lg:text-xl max-w-2xl mx-auto font-normal leading-relaxed">
+            Get job-ready in 12 high-impact tech and vocational skills. Built for direct employment and entrepreneurship.
           </p>
 
           {/* Action CTAs */}

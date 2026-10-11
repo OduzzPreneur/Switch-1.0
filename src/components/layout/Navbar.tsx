@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -17,6 +17,20 @@ const navItems = [
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+
+  // Automatically close mobile menu on route changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  // Close mobile menu on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileMenuOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <nav className="bg-switch-dark text-white border-b border-white/10 sticky top-0 z-50 shadow-md backdrop-blur-md bg-switch-dark/95">
@@ -127,38 +141,48 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Floating Overlay Menu & Transparent Backdrop */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-switch-dark border-b border-white/10 px-4 pt-2 pb-5 space-y-1.5 shadow-xl">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-            return (
+        <>
+          {/* Transparent Backdrop Scrim: clicking the side / outside dismisses the menu */}
+          <div
+            onClick={() => setMobileMenuOpen(false)}
+            className="fixed inset-0 top-16 sm:top-[72px] bg-slate-950/60 backdrop-blur-sm z-40 md:hidden animate-in fade-in duration-200"
+            aria-hidden="true"
+          />
+
+          {/* Floating Glassmorphic Menu: sits on top of hero section without pushing it down */}
+          <div className="absolute top-full left-0 right-0 md:hidden bg-switch-dark/95 backdrop-blur-xl border-b border-white/10 px-4 pt-3 pb-6 space-y-1.5 shadow-2xl z-50 animate-in slide-in-from-top-2 duration-200">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-switch-teal text-white font-semibold'
+                      : 'text-slate-300 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 text-switch-orange" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+            <div className="pt-3 border-t border-white/10">
               <Link
-                key={item.label}
-                href={item.href}
+                href="/register"
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-switch-teal text-white font-semibold'
-                    : 'text-slate-300 hover:text-white hover:bg-white/10'
-                }`}
+                className="w-full text-center block bg-gradient-to-r from-switch-orange to-orange-500 hover:from-switch-orange-600 hover:to-orange-600 text-white font-bold py-2.5 rounded-xl text-sm transition-all shadow-md"
               >
-                <Icon className="w-4 h-4 text-switch-orange" />
-                <span>{item.label}</span>
+                Register for Cohort 1.0
               </Link>
-            );
-          })}
-          <div className="pt-3 border-t border-white/10">
-            <Link
-              href="/register"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-center block bg-switch-orange hover:bg-switch-orange-600 text-white font-bold py-2.5 rounded-xl text-sm transition-colors shadow-sm"
-            >
-              Register for Cohort 1.0
-            </Link>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </nav>
   );
