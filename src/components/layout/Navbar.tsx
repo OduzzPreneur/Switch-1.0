@@ -144,15 +144,15 @@ export default function Navbar() {
       {/* Mobile Floating Overlay Menu & Transparent Backdrop */}
       {mobileMenuOpen && (
         <>
-          {/* Transparent Backdrop Scrim: clicking the side / outside dismisses the menu */}
+          {/* Dimmed Blurred Backdrop Scrim: covers viewport below navbar, tap to dismiss */}
           <div
             onClick={() => setMobileMenuOpen(false)}
-            className="fixed inset-0 top-16 sm:top-[72px] bg-slate-950/60 backdrop-blur-sm z-40 md:hidden animate-in fade-in duration-200"
+            className="fixed inset-0 top-16 sm:top-[72px] bg-slate-950/75 backdrop-blur-xs z-40 md:hidden animate-in fade-in duration-200"
             aria-hidden="true"
           />
 
-          {/* Floating Glassmorphic Menu: sits on top of hero section without pushing it down */}
-          <div className="absolute top-full left-0 right-0 md:hidden bg-switch-dark/95 backdrop-blur-xl border-b border-white/10 px-4 pt-3 pb-6 space-y-1.5 shadow-2xl z-50 animate-in slide-in-from-top-2 duration-200">
+          {/* Floating Solid Menu Panel: 100% opaque to eliminate text collisions */}
+          <div className="absolute top-full left-0 right-0 md:hidden bg-[#071E26] border-b border-white/15 px-4 pt-3 pb-4 space-y-1 shadow-2xl z-50 animate-in slide-in-from-top-2 duration-200">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -172,15 +172,6 @@ export default function Navbar() {
                 </Link>
               );
             })}
-            <div className="pt-3 border-t border-white/10">
-              <Link
-                href="/register"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center block bg-gradient-to-r from-switch-orange to-orange-500 hover:from-switch-orange-600 hover:to-orange-600 text-white font-bold py-2.5 rounded-xl text-sm transition-all shadow-md"
-              >
-                Register for Cohort 1.0
-              </Link>
-            </div>
           </div>
         </>
       )}
