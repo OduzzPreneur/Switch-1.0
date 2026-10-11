@@ -1,0 +1,56 @@
+import type { Metadata } from 'next';
+import './globals.css';
+import PartnerHeader from '@/components/layout/PartnerHeader';
+import AnnouncementBanner from '@/components/layout/AnnouncementBanner';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
+
+export const metadata: Metadata = {
+  title: 'Switch 1.0 | Youth Tech & Vocational Empowerment Platform',
+  description:
+    'Switch 1.0 is an intensive youth empowerment initiative (Ages 15–40) featuring 12 tech and vocational tracks. Subsidized by GOFAMINT Youth Fellowship (GYF - Strong & Able). Registration token fee: ₦5,000.',
+  keywords: [
+    'Switch 1.0',
+    'GOFAMINT Youth Fellowship',
+    'Tech Skills Nigeria',
+    'Vocational Training',
+    'Youth Empowerment',
+    'Software Engineering',
+    'Solar Installation',
+    'UI/UX Design',
+    'Cybersecurity',
+  ],
+  authors: [{ name: 'The Switch Initiative & GYF' }],
+  icons: {
+    icon: '/logos/switch-logo.jpg',
+  },
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" className="scroll-smooth">
+      <body className="min-h-screen flex flex-col bg-slate-50 antialiased selection:bg-switch-teal selection:text-white">
+        {/* Institutional Partner Banner (3MTT/RAIN Inspired) */}
+        <PartnerHeader />
+
+        {/* Dynamic Broadcast Announcement Banner */}
+        <AnnouncementBanner />
+
+        {/* Global Navigation Header */}
+        <Navbar />
+
+        {/* Main Application Body */}
+        <main className="flex-1">
+          {children}
+        </main>
+
+        {/* Global Footer */}
+        <Footer />
+      </body>
+    </html>
+  );
+}
