@@ -46,8 +46,27 @@ function RegisterForm() {
   });
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState<any | null>(null);
+  const [existingStudent, setExistingStudent] = useState<any | null>(null);
+
+  // Check if current browser already has a verified registration
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('switch_student_session');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed?.registrationNumber) {
+            setExistingStudent(parsed);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+  }, []);
 
   // Pre-select track if query param exists
   useEffect(() => {
@@ -113,6 +132,9 @@ function RegisterForm() {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
+        if (data.isAlreadyRegistered) {
+          setIsAlreadyRegistered(true);
+        }
         throw new Error(data.message || 'Payment initialization failed. Please try again.');
       }
 
@@ -278,13 +300,58 @@ function RegisterForm() {
         </div>
       </div>
 
+      {/* Existing Student Detected Banner */}
+      {existingStudent && (
+        <div className="mb-8 p-5 bg-teal-50 border border-teal-200 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-switch-teal text-white flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-5 h-5 text-emerald-300" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-slate-900">
+                You are Already Registered for Cohort 1.0!
+              </h4>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Enrolled as <strong>{existingStudent.fullName}</strong> (ID: <span className="font-mono font-bold text-switch-teal">{existingStudent.registrationNumber}</span>). You do not need to register again.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto justify-end">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-1.5 bg-switch-teal hover:bg-switch-teal-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors shadow-xs"
+            >
+              <span>Access Dashboard</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+            <button
+              onClick={() => setExistingStudent(null)}
+              className="text-xs text-slate-500 hover:text-slate-800 underline px-2 py-1"
+            >
+              Register Someone Else
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Error alert */}
       {errorMsg && (
         <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs sm:text-sm flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-          <div>
+          <div className="flex-1">
             <strong className="font-bold">Notice: </strong>
             <span>{errorMsg}</span>
+            {isAlreadyRegistered && (
+              <div className="mt-2.5">
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-1.5 bg-switch-teal hover:bg-switch-teal-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition-colors shadow-xs"
+                >
+                  <span>Sign In to Student Portal</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}

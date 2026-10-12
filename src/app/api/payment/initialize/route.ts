@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initializePaystackPayment } from '@/lib/paystack';
 import { TOKEN_AMOUNT_KOBO, generateRegistrationNumber, sanitizeInput } from '@/lib/security';
+import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase/admin';
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,6 +27,35 @@ export async function POST(req: NextRequest) {
         { success: false, message: 'Target age must be between 15 and 40 years.' },
         { status: 400 }
       );
+    }
+
+    // Check for existing confirmed registration (Prevent double registration)
+    if (isSupabaseAdminConfigured && supabaseAdmin) {
+      const { data: existingProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('id, full_name, email')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (existingProfile) {
+        const { data: existingReg } = await supabaseAdmin
+          .from('registrations')
+          .select('id, registration_number, status')
+          .eq('user_id', existingProfile.id)
+          .maybeSingle();
+
+        if (existingReg && existingReg.status === 'confirmed') {
+          return NextResponse.json(
+            {
+              success: false,
+              message: `A student with email "${email}" is already registered (ID: ${existingReg.registration_number}). You cannot register twice. Please sign in to your student portal.`,
+              isAlreadyRegistered: true,
+              registrationNumber: existingReg.registration_number,
+            },
+            { status: 409 }
+          );
+        }
+      }
     }
 
     const reference = `SW1_${Date.now()}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;

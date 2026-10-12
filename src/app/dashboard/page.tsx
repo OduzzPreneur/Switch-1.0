@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { TRACKS } from '@/data/tracks';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import {
   User,
   ShieldCheck,
@@ -31,28 +32,84 @@ export default function StudentDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if session exists in localStorage
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('switch_student_session');
-      if (stored) {
+    let isMounted = true;
+
+    async function loadStudentSession() {
+      // 1. Try Supabase Auth session if configured
+      if (isSupabaseConfigured && supabase) {
         try {
-          const parsed = JSON.parse(stored);
-          setStudent(parsed);
-          setLoading(false);
-          return;
-        } catch (e) {
-          console.error(e);
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user && isMounted) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', user.id)
+              .maybeSingle();
+
+            const { data: reg } = await supabase
+              .from('registrations')
+              .select('*')
+              .eq('user_id', user.id)
+              .maybeSingle();
+
+            if (profile && reg) {
+              setStudent({
+                fullName: profile.full_name,
+                email: profile.email,
+                phone: profile.phone,
+                ageBracket: profile.age_bracket,
+                gender: profile.gender,
+                stateOfResidence: profile.state_of_residence,
+                trackId: reg.track_id,
+                learningMode: reg.learning_mode,
+                registrationNumber: reg.registration_number,
+                paymentReference: 'Verified Cloud Account',
+                amountPaid: 5000,
+                paymentStatus: 'verified',
+              });
+              setLoading(false);
+              return;
+            }
+          }
+        } catch (supabaseErr) {
+          console.warn('Supabase session fetch fallback:', supabaseErr);
         }
+      }
+
+      // 2. Check localStorage session fallback
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('switch_student_session');
+        if (stored && isMounted) {
+          try {
+            const parsed = JSON.parse(stored);
+            setStudent(parsed);
+            setLoading(false);
+            return;
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+
+      // If no valid session found, redirect to login
+      if (isMounted) {
+        router.push('/login');
       }
     }
 
-    // If no student session found, redirect to login
-    router.push('/login');
+    loadStudentSession();
+
+    return () => {
+      isMounted = false;
+    };
   }, [router]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('switch_student_session');
+    }
+    if (isSupabaseConfigured && supabase) {
+      await supabase.auth.signOut();
     }
     router.push('/login');
   };
