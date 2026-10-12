@@ -34,13 +34,16 @@ export async function POST(req: NextRequest) {
     // Generate unique verifiable Registration Number
     const registrationNumber = generateRegistrationNumber();
 
+    // Extract metadata from Paystack verification response as a robust fallback
+    const meta = verification.data.metadata || {};
+
     const registrationRecord = {
-      fullName: studentData?.fullName || verification.data.customer?.email?.split('@')[0],
-      email: studentData?.email || verification.data.customer?.email,
-      phone: studentData?.phone || '',
-      ageBracket: studentData?.ageBracket || '21-25',
-      trackId: studentData?.trackId || 'software-engineering',
-      learningMode: studentData?.learningMode || 'Online / Virtual',
+      fullName: studentData?.fullName || meta.fullName || verification.data.customer?.email?.split('@')[0],
+      email: studentData?.email || meta.email || verification.data.customer?.email,
+      phone: studentData?.phone || meta.phone || '',
+      ageBracket: studentData?.ageBracket || meta.ageBracket || '21-25',
+      trackId: studentData?.trackId || meta.trackId || 'software-engineering',
+      learningMode: studentData?.learningMode || meta.learningMode || 'Online / Virtual',
       registrationNumber,
       paymentReference: reference,
       amountPaid: 5000,

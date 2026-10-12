@@ -48,7 +48,7 @@ export const registrationSchema = z.object({
   trackId: z.string().min(2, 'Please select your preferred track'),
   password: z
     .string()
-    .min(8, 'Password must be at least 8 characters')
+    .min(6, 'Password must be at least 6 characters')
     .max(100)
     .optional(),
 });
