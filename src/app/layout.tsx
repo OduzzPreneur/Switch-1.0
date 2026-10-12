@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'The Switch Initiative & GYF' }],
   icons: {
-    icon: '/logos/switch-logo.jpg',
+    icon: '/logos/switch-logo.svg',
   },
 };
 

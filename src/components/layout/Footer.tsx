@@ -16,9 +16,9 @@ export default function Footer() {
           {/* Col 1 & 2: Brand & Partnership Story */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg overflow-hidden bg-white p-0.5 border border-white/20">
+              <div className="w-10 h-10 drop-shadow-[0_2px_8px_rgba(255,94,20,0.25)]">
                 <Image
-                  src="/logos/switch-logo.jpg"
+                  src="/logos/switch-logo.svg"
                   alt="The Switch 1.0"
                   width={40}
                   height={40}

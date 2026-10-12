@@ -38,42 +38,27 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 sm:h-[72px]">
           
           {/* Professional Brand & Partner Logo Cluster */}
-          <div className="flex items-center gap-3 sm:gap-4">
-            <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group">
+          <div className="flex items-center gap-3 sm:gap-5">
+            <Link href="/" className="flex items-center group py-1" aria-label="The Switch 1.0 Home">
               {/* Switch Brand Logo Container */}
-              <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden bg-white p-1 border border-white/20 shadow-sm group-hover:scale-105 transition-transform">
+              <div className="relative w-10 h-10 sm:w-11 sm:h-11 transition-transform duration-200 group-hover:scale-105 drop-shadow-[0_2px_10px_rgba(255,94,20,0.25)]">
                 <Image
-                  src="/logos/switch-logo.jpg"
-                  alt="The Switch"
+                  src="/logos/switch-logo.svg"
+                  alt="The Switch 1.0"
                   fill
                   sizes="44px"
                   className="object-contain"
                   priority
                 />
               </div>
-
-              {/* Typography Wordmark */}
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-black text-base sm:text-lg tracking-tight text-white leading-none">
-                    THE SWITCH
-                  </span>
-                  <span className="bg-switch-orange text-white text-[10px] sm:text-[11px] font-extrabold px-1.5 py-0.5 rounded shadow-2xs font-mono">
-                    1.0
-                  </span>
-                </div>
-                <span className="text-[10px] text-slate-400 font-medium tracking-wide hidden sm:block mt-0.5">
-                  Youth Empowerment
-                </span>
-              </div>
             </Link>
 
             {/* Subtle Vertical Divider */}
-            <div className="h-6 w-[1px] bg-white/20 hidden xs:block" />
+            <div className="h-6 w-[1px] bg-white/15 hidden sm:block" />
 
             {/* Partner Logo (GOFAMINT Youth Fellowship) */}
-            <div className="hidden xs:flex items-center gap-2" title="In partnership with GOFAMINT Youth Fellowship (GYF)">
-              <div className="relative w-8 h-8 rounded-full overflow-hidden bg-white p-0.5 border border-white/20 shadow-xs">
+            <div className="hidden sm:flex items-center gap-2" title="In partnership with GOFAMINT Youth Fellowship (GYF)">
+              <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-white p-0.5 border border-white/20 shadow-xs">
                 <Image
                   src="/logos/gofamint-logo.jpg"
                   alt="GOFAMINT Youth Fellowship"

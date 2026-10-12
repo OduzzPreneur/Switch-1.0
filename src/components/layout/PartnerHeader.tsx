@@ -14,8 +14,8 @@ export default function PartnerHeader() {
           <Link href="/" className="inline-block transition-transform hover:scale-105">
             <div className="relative w-12 h-12 sm:w-14 sm:h-14">
               <Image
-                src="/logos/switch-logo.jpg"
-                alt="The Switch"
+                src="/logos/switch-logo.svg"
+                alt="The Switch 1.0"
                 fill
                 sizes="56px"
                 className="object-contain"

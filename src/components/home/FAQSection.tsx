@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { ChevronDown, HelpCircle } from 'lucide-react';
+import ScrollReveal from '@/components/common/ScrollReveal';
 
 const faqs = [
   {
@@ -45,47 +46,52 @@ export default function FAQSection() {
     <section id="faqs" className="py-20 bg-white border-t border-slate-200">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-switch-teal/10 text-switch-teal text-xs font-bold uppercase tracking-wider mb-3">
-            <HelpCircle className="w-3.5 h-3.5 text-switch-orange" />
-            Frequently Asked Questions
+        <ScrollReveal animation="fade-up">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-switch-teal/10 text-switch-teal text-xs font-bold uppercase tracking-wider mb-3">
+              <HelpCircle className="w-3.5 h-3.5 text-switch-orange" />
+              Frequently Asked Questions
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-switch-dark tracking-tight">
+              Got Questions? We Have Answers.
+            </h2>
+            <p className="mt-2 text-slate-600 text-sm sm:text-base">
+              Everything you need to know about the Switch 1.0 empowerment program.
+            </p>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-switch-dark tracking-tight">
-            Got Questions? We Have Answers.
-          </h2>
-          <p className="mt-2 text-slate-600 text-sm sm:text-base">
-            Everything you need to know about the Switch 1.0 empowerment program.
-          </p>
-        </div>
+        </ScrollReveal>
 
         <div className="space-y-4">
           {faqs.map((faq, index) => {
             const isOpen = openIndex === index;
             return (
-              <div
+              <ScrollReveal
                 key={index}
-                className="border border-slate-200 rounded-2xl overflow-hidden transition-colors bg-slate-50/50 hover:bg-slate-50"
+                animation="fade-up"
+                delay={index * 40}
               >
-                <button
-                  onClick={() => toggleFAQ(index)}
-                  className="w-full text-left p-5 sm:p-6 flex items-center justify-between gap-4 focus:outline-none"
-                >
-                  <span className="font-bold text-slate-900 text-sm sm:text-base">
-                    {faq.q}
-                  </span>
-                  <ChevronDown
-                    className={`w-5 h-5 text-slate-500 shrink-0 transition-transform duration-200 ${
-                      isOpen ? 'rotate-180 text-switch-orange' : ''
-                    }`}
-                  />
-                </button>
+                <div className="border border-slate-200 rounded-2xl overflow-hidden transition-colors bg-slate-50/50 hover:bg-slate-50">
+                  <button
+                    onClick={() => toggleFAQ(index)}
+                    className="w-full text-left p-5 sm:p-6 flex items-center justify-between gap-4 focus:outline-none"
+                  >
+                    <span className="font-bold text-slate-900 text-sm sm:text-base">
+                      {faq.q}
+                    </span>
+                    <ChevronDown
+                      className={`w-5 h-5 text-slate-500 shrink-0 transition-transform duration-200 ${
+                        isOpen ? 'rotate-180 text-switch-orange' : ''
+                      }`}
+                    />
+                  </button>
 
-                {isOpen && (
-                  <div className="px-5 sm:px-6 pb-6 pt-1 text-slate-600 text-sm leading-relaxed border-t border-slate-100 bg-white">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
+                  {isOpen && (
+                    <div className="px-5 sm:px-6 pb-6 pt-1 text-slate-600 text-sm leading-relaxed border-t border-slate-100 bg-white">
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              </ScrollReveal>
             );
           })}
         </div>
