@@ -196,22 +196,6 @@ export default function StudentDashboardPage() {
       {/* Main Dashboard Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
         
-        {/* Dynamic Action Required Announcement */}
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5 flex items-start gap-4 shadow-xs">
-          <div className="p-2 bg-amber-100 text-amber-700 rounded-xl shrink-0 mt-0.5">
-            <Bell className="w-5 h-5 animate-bounce" />
-          </div>
-          <div className="flex-1 space-y-1">
-            <h4 className="font-bold text-amber-900 text-sm flex items-center gap-2">
-              <span>Official Cohort 1.0 Action Notice</span>
-              <span className="text-[10px] font-extrabold uppercase bg-amber-200/80 text-amber-800 px-2 py-0.5 rounded">Action Center</span>
-            </h4>
-            <p className="text-xs text-amber-800 leading-relaxed">
-              Welcome to Switch 1.0! Training dates and physical center allocations across designated <strong>GOFAMINT Youth Fellowship hubs</strong> are currently being assigned. Ensure your contact details and WhatsApp phone number are kept active.
-            </p>
-          </div>
-        </div>
-
         {/* Tab 1: Overview */}
         {activeTab === 'overview' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -328,21 +312,21 @@ export default function StudentDashboardPage() {
                 </button>
               </div>
 
-              {/* Partner Sponsorship Note */}
+              {/* Program Support / Help Card */}
               <div className="bg-gradient-to-br from-switch-teal to-switch-dark text-white rounded-3xl p-6 shadow-md space-y-3">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-orange-300 uppercase tracking-wider">
-                    Sponsorship Partner
+                    Cohort 1.0 Support
                   </span>
                 </div>
                 <h4 className="text-base font-bold">
-                  GOFAMINT Youth Fellowship (GYF)
+                  Orientation & Onboarding
                 </h4>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Equipping you with industry-grade capacity and economic independence in partnership with GOFAMINT Youth Fellowship.
+                  Your track lead and mentor assignments are currently in progress. Access links and curriculum details will be published ahead of kickoff.
                 </p>
                 <div className="text-[10px] text-emerald-300 font-bold">
-                  • GYF: Strong & Able
+                  • Technical Mentorship & Career Guidance
                 </div>
               </div>
 
@@ -396,7 +380,7 @@ export default function StudentDashboardPage() {
                 Timetable & Physical Center Allocations
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                Session scheduling for virtual streams and GOFAMINT Youth Fellowship physical hubs.
+                Session scheduling for virtual streams and Switch 1.0 physical training hubs.
               </p>
             </div>
 
@@ -416,7 +400,7 @@ export default function StudentDashboardPage() {
               </div>
               <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-2">
                 <span className="font-bold text-slate-900">Physical Practical Workshops:</span>
-                <p className="text-slate-600">Conducted at designated regional GOFAMINT youth empowerment centers with certified technical mentors.</p>
+                <p className="text-slate-600">Conducted at designated regional Switch 1.0 empowerment centers with certified technical mentors.</p>
               </div>
             </div>
           </div>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Menu, X, Compass, Layers, ShieldCheck, HelpCircle, LogIn, ArrowRight } from 'lucide-react';
+import SwitchLogo from '@/components/common/SwitchLogo';
 
 const navItems = [
   { label: 'Overview', href: '/', icon: Compass },
@@ -37,41 +38,12 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-[72px]">
           
-          {/* Professional Brand & Partner Logo Cluster */}
-          <div className="flex items-center gap-3 sm:gap-5">
-            <Link href="/" className="flex items-center group py-1" aria-label="The Switch 1.0 Home">
-              {/* Switch Brand Logo Container */}
-              <div className="relative w-10 h-10 sm:w-11 sm:h-11 transition-transform duration-200 group-hover:scale-105 drop-shadow-[0_2px_10px_rgba(255,94,20,0.25)]">
-                <Image
-                  src="/logos/switch-logo.svg"
-                  alt="The Switch 1.0"
-                  fill
-                  sizes="44px"
-                  className="object-contain"
-                  priority
-                />
-              </div>
-            </Link>
-
-            {/* Subtle Vertical Divider */}
-            <div className="h-6 w-[1px] bg-white/15 hidden sm:block" />
-
-            {/* Partner Logo (GOFAMINT Youth Fellowship) */}
-            <div className="hidden sm:flex items-center gap-2" title="In partnership with GOFAMINT Youth Fellowship (GYF)">
-              <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-white p-0.5 border border-white/20 shadow-xs">
-                <Image
-                  src="/logos/gofamint-logo.jpg"
-                  alt="GOFAMINT Youth Fellowship"
-                  fill
-                  sizes="32px"
-                  className="object-contain"
-                />
-              </div>
-              <span className="text-[11px] text-slate-300 font-semibold hidden lg:inline">
-                GOFAMINT GYF
-              </span>
+          {/* Brand Logo Only */}
+          <Link href="/" className="flex items-center group py-1" aria-label="The Switch 1.0 Home">
+            <div className="transition-transform duration-200 group-hover:scale-105 drop-shadow-[0_2px_10px_rgba(255,94,20,0.25)]">
+              <SwitchLogo className="w-10 h-10 sm:w-11 sm:h-11" />
             </div>
-          </div>
+          </Link>
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center space-x-1 lg:space-x-2">

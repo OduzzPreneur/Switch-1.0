@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ShieldCheck, HeartHandshake, Mail, MapPin, Phone, Lock } from 'lucide-react';
 import { TRACKS } from '@/data/tracks';
+import SwitchLogo from '@/components/common/SwitchLogo';
 
 export default function Footer() {
   return (
@@ -17,13 +18,7 @@ export default function Footer() {
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 drop-shadow-[0_2px_8px_rgba(255,94,20,0.25)]">
-                <Image
-                  src="/logos/switch-logo.svg"
-                  alt="The Switch 1.0"
-                  width={40}
-                  height={40}
-                  className="object-contain w-full h-full"
-                />
+                <SwitchLogo className="w-10 h-10" />
               </div>
               <div>
                 <span className="text-lg font-black text-white tracking-tight">

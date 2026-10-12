@@ -3,6 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import SwitchLogo from '@/components/common/SwitchLogo';
 
 export default function PartnerHeader() {
   return (
@@ -11,17 +12,8 @@ export default function PartnerHeader() {
         {/* Only the partner logos */}
         <div className="flex items-center gap-6 sm:gap-8">
           {/* The Switch Logo */}
-          <Link href="/" className="inline-block transition-transform hover:scale-105">
-            <div className="relative w-12 h-12 sm:w-14 sm:h-14">
-              <Image
-                src="/logos/switch-logo.svg"
-                alt="The Switch 1.0"
-                fill
-                sizes="56px"
-                className="object-contain"
-                priority
-              />
-            </div>
+          <Link href="/" className="inline-block transition-transform hover:scale-105" aria-label="The Switch 1.0">
+            <SwitchLogo className="w-12 h-12 sm:w-14 sm:h-14" size={56} />
           </Link>
 
           {/* Divider */}
