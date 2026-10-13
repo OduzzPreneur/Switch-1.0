@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   Menu,
   X,
@@ -30,6 +30,45 @@ import {
 import SwitchLogo from '@/components/common/SwitchLogo';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { getOrInitDefaultStudent } from '@/lib/portalState';
+
+function StudentDesktopNav({ pathname }: { pathname: string }) {
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get('tab') || 'overview';
+
+  const items = [
+    { label: 'Overview', href: '/dashboard', tab: 'overview' },
+    { label: 'Curriculum', href: '/dashboard?tab=curriculum', tab: 'curriculum' },
+    { label: 'Blueprint Courses', href: '/dashboard?tab=blueprint-courses', tab: 'blueprint-courses' },
+    { label: 'Session Recordings', href: '/dashboard?tab=session-recordings', tab: 'session-recordings' },
+    { label: 'Assessments', href: '/dashboard?tab=assessments', tab: 'assessments' },
+    { label: 'Timetable & Venue', href: '/dashboard?tab=timetable', tab: 'timetable' },
+  ];
+
+  return (
+    <div className="hidden lg:flex items-center space-x-1">
+      {items.map((item) => {
+        const isOverview = item.tab === 'overview';
+        const isActive =
+          pathname === '/dashboard' &&
+          (isOverview ? !searchParams.get('tab') || currentTab === 'overview' : currentTab === item.tab);
+
+        return (
+          <Link
+            key={item.label}
+            href={item.href}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              isActive
+                ? 'bg-switch-teal text-white shadow-sm ring-1 ring-teal-400/30'
+                : 'text-slate-300 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -157,11 +196,11 @@ export default function Navbar() {
             
             {/* Left: Logo & Portal Label */}
             <div className="flex items-center gap-3">
-              {/* If on student dashboard, show hamburger on mobile & tablet right beside logo (3MTT style) */}
+              {/* If on student dashboard, show hamburger ONLY on mobile & tablet */}
               {isDashboardRoute && (
                 <button
                   onClick={() => setMobileMenuOpen(true)}
-                  className="p-2 -ml-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 focus:outline-none transition-colors"
+                  className="p-2 -ml-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 lg:hidden focus:outline-none transition-colors"
                   aria-label="Open Student Portal Navigation Drawer"
                 >
                   <Menu className="w-6 h-6 text-switch-teal" />
@@ -204,78 +243,14 @@ export default function Navbar() {
                 })}
               </div>
             ) : (
-              // In Student Dashboard Desktop: Quick links / Breadcrumb
-              <div className="hidden lg:flex items-center space-x-1">
-                <Link
-                  href="/dashboard"
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                    pathname === '/dashboard' ? 'bg-switch-teal text-white' : 'text-slate-300 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  Overview
-                </Link>
-                <Link
-                  href="/dashboard/profile"
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                    pathname === '/dashboard/profile' ? 'bg-switch-teal text-white' : 'text-slate-300 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  My Profile
-                </Link>
-                <Link
-                  href="/dashboard?tab=curriculum"
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
-                >
-                  Curriculum
-                </Link>
-                <Link
-                  href="/dashboard?tab=assessments"
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
-                >
-                  Assessments
-                </Link>
-                <Link
-                  href="/dashboard?tab=timetable"
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
-                >
-                  Timetable
-                </Link>
-              </div>
+              // In Student Dashboard Desktop: Unified Clean Navigation (All 6 Modules)
+              <Suspense fallback={<div className="hidden lg:flex items-center space-x-1" />}>
+                <StudentDesktopNav pathname={pathname} />
+              </Suspense>
             )}
 
-            {/* Right Action Icons (3MTT Reference: Messages / Bell / Profile Avatar) */}
+            {/* Right Action Icons (Messages / Bell / Profile Avatar) */}
             <div className="flex items-center gap-2 sm:gap-3">
-              
-              {/* Role Switcher Pill for quick testing (portals only) */}
-              {(isDashboardRoute || isAdminRoute || isInstructorRoute) && (
-                <div className="hidden xl:flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10 text-[11px] font-semibold">
-                  <Link
-                    href="/dashboard"
-                    className={`px-2 py-0.5 rounded-lg transition-colors ${
-                      isDashboardRoute ? 'bg-switch-teal text-white' : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    Student
-                  </Link>
-                  <Link
-                    href="/instructor"
-                    className={`px-2 py-0.5 rounded-lg transition-colors ${
-                      isInstructorRoute ? 'bg-amber-600 text-white' : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    Instructor
-                  </Link>
-                  <Link
-                    href="/admin"
-                    className={`px-2 py-0.5 rounded-lg transition-colors ${
-                      isAdminRoute ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    Admin
-                  </Link>
-                </div>
-              )}
-
               {isDashboardRoute ? (
                 // Authenticated Student Top Controls
                 <>
@@ -459,29 +434,6 @@ export default function Navbar() {
                   </Link>
                 );
               })}
-
-              {/* Portal Roles Switcher Section in Drawer for easy inspection */}
-              <div className="pt-4 mt-3 border-t border-white/10">
-                <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-3 pb-2">
-                  Switch Portal Views
-                </div>
-                <Link
-                  href="/instructor"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-amber-300 hover:bg-white/5 transition-colors"
-                >
-                  <Briefcase className="w-4 h-4 text-amber-400" />
-                  <span>Course Instructor Portal</span>
-                </Link>
-                <Link
-                  href="/admin"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-purple-300 hover:bg-white/5 transition-colors"
-                >
-                  <Shield className="w-4 h-4 text-purple-400" />
-                  <span>Administrative Console</span>
-                </Link>
-              </div>
             </div>
 
             {/* Bottom Status Card (3MTT Reference Image 3) */}

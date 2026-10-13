@@ -20,7 +20,6 @@ import {
   Calendar,
   BookOpen,
   Download,
-  Lock,
   LogOut,
   Clock,
   Sparkles,
@@ -226,162 +225,36 @@ function DashboardContent() {
   return (
     <div className="min-h-screen bg-slate-100/70 pb-20">
       
-      {/* ========================================================================= */}
-      {/* 1. STUDENT IDENTITY STRIP (Image 1 Layout Reference)                      */}
-      {/* ========================================================================= */}
-      <div className="bg-white border-b border-slate-200 shadow-2xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            
-            {/* Left: Avatar initial + Name + Mode */}
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-switch-teal text-white flex items-center justify-center font-black text-2xl shadow-md border-2 border-white ring-2 ring-switch-teal/20 shrink-0">
-                {student.fullName ? student.fullName.charAt(0).toUpperCase() : 'S'}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
-                    {student.fullName}
-                  </h2>
-                  <span className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    <ShieldCheck className="w-3 h-3 mr-1" />
-                    Verified Student
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 font-medium mt-0.5">
-                  <span className="text-switch-teal font-semibold">Self-paced · Cohort 1.0</span>
-                  <span>•</span>
-                  <span>ID: <strong className="font-mono text-slate-700">{student.registrationNumber}</strong></span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Quick action pills */}
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <button
-                onClick={() => setActiveTab('curriculum')}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold transition-colors shadow-2xs"
-              >
-                Jump to my week
-              </button>
-              <Link
-                href="/dashboard/profile"
-                className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold transition-colors shadow-2xs inline-flex items-center gap-1"
-              >
-                <Download className="w-3 h-3" />
-                <span>Save registration slip</span>
-              </Link>
-              <Link
-                href="/dashboard/profile"
-                className="px-3 py-1.5 rounded-lg border border-switch-teal/30 bg-teal-50/50 hover:bg-teal-50 text-switch-teal font-semibold transition-colors shadow-2xs"
-              >
-                Change password
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-rose-50 hover:text-rose-600 text-slate-600 font-semibold transition-colors shadow-2xs inline-flex items-center gap-1"
-              >
-                <Lock className="w-3 h-3" />
-                <span>Lock / Exit</span>
-              </button>
-              <span className="text-[10px] text-slate-400 font-mono pl-1">v1.0</span>
-            </div>
-
-          </div>
+      {/* Mobile-only quick module switcher (Hidden on desktop to eliminate double navbars) */}
+      <div className="lg:hidden bg-[#071E26] text-white border-b border-white/10 sticky top-16 sm:top-[72px] z-30 shadow-md">
+        <div className="px-3 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs">
+          {[
+            { label: 'Overview', tab: 'overview' },
+            { label: 'Curriculum', tab: 'curriculum' },
+            { label: 'Blueprint', tab: 'blueprint-courses' },
+            { label: 'Recordings', tab: 'session-recordings' },
+            { label: 'Assessments', tab: 'assessments' },
+            { label: 'Timetable', tab: 'timetable' },
+          ].map((item) => (
+            <button
+              key={item.tab}
+              onClick={() => setActiveTab(item.tab as any)}
+              className={`px-3 py-1.5 rounded-lg font-bold whitespace-nowrap transition-all ${
+                activeTab === item.tab
+                  ? 'bg-switch-teal text-white shadow-xs'
+                  : 'text-slate-300 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. SECONDARY DASHBOARD NAVIGATION TABS (6 Core Student Modules)           */}
+      {/* MAIN DASHBOARD CONTENT AREA                                               */}
       {/* ========================================================================= */}
-      <div className="bg-[#071E26] text-white border-b border-white/10 sticky top-[64px] sm:top-[72px] z-30 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-1 overflow-x-auto text-xs py-1.5 no-scrollbar">
-            
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`px-4 py-2 font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                activeTab === 'overview'
-                  ? 'bg-switch-teal text-white shadow-sm'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <span>Overview</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('curriculum')}
-              className={`px-4 py-2 font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                activeTab === 'curriculum'
-                  ? 'bg-switch-teal text-white shadow-sm'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>Track Curriculum</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('blueprint-courses')}
-              className={`px-4 py-2 font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                activeTab === 'blueprint-courses'
-                  ? 'bg-switch-teal text-white shadow-sm'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <GraduationCap className="w-3.5 h-3.5 text-amber-300" />
-              <span>Blueprint Courses</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('session-recordings')}
-              className={`px-4 py-2 font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                activeTab === 'session-recordings'
-                  ? 'bg-switch-teal text-white shadow-sm'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Video className="w-3.5 h-3.5 text-rose-300" />
-              <span>Session Recordings</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('assessments')}
-              className={`px-4 py-2 font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                activeTab === 'assessments'
-                  ? 'bg-switch-teal text-white shadow-sm'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <FileCheck2 className="w-3.5 h-3.5 text-emerald-300" />
-              <span>Assessments</span>
-              {assessmentStats.totalAssigned > 0 && (
-                <span className="ml-1 text-[10px] bg-emerald-500/30 text-emerald-300 px-1.5 py-0.2 rounded-full font-bold">
-                  {assessmentStats.approvedCount}/{assessmentStats.totalAssigned}
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('timetable')}
-              className={`px-4 py-2 font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                activeTab === 'timetable'
-                  ? 'bg-switch-teal text-white shadow-sm'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <CalendarDays className="w-3.5 h-3.5 text-orange-300" />
-              <span>Timetable & Venue</span>
-            </button>
-
-          </div>
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 3. MAIN DASHBOARD CONTENT AREA                                            */}
-      {/* ========================================================================= */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 space-y-6">
 
         {/* 3MTT INSPIRED HERO BANNER (Image 2 Reference) */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-800 via-teal-800 to-[#071E26] text-white p-6 sm:p-8 shadow-md">

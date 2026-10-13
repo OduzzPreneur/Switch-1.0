@@ -2,12 +2,61 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { ShieldCheck, HeartHandshake, Mail, MapPin, Phone, Lock } from 'lucide-react';
 import { TRACKS } from '@/data/tracks';
 import SwitchLogo from '@/components/common/SwitchLogo';
 
 export default function Footer() {
+  const pathname = usePathname();
+  const isPortalRoute =
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/instructor') ||
+    pathname.startsWith('/admin');
+
+  if (isPortalRoute) {
+    return (
+      <footer className="bg-[#071E26] text-slate-400 border-t border-white/10 py-6 px-4 text-xs mt-auto">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5 text-white">
+            <SwitchLogo className="w-6 h-6" />
+            <span className="font-bold text-sm tracking-tight">Switch 1.0 Portal</span>
+            <span className="text-slate-500">|</span>
+            <span className="text-emerald-400 text-[11px] font-mono px-2 py-0.5 rounded-md bg-white/5 border border-white/10">
+              Cohort 1.0
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-5 text-slate-300 text-xs font-semibold">
+            <Link href="/dashboard" className="hover:text-emerald-400 transition-colors">
+              Dashboard Overview
+            </Link>
+            <Link href="/dashboard?tab=curriculum" className="hover:text-emerald-400 transition-colors">
+              Curriculum
+            </Link>
+            <Link href="/dashboard?tab=timetable" className="hover:text-emerald-400 transition-colors">
+              Timetable & Venue
+            </Link>
+            <Link href="/dashboard?tab=assessments" className="hover:text-emerald-400 transition-colors">
+              Assessments
+            </Link>
+            <Link href="/dashboard/profile" className="hover:text-emerald-400 transition-colors">
+              My Profile
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-3 text-slate-400 text-[11px]">
+            <span className="flex items-center gap-1 text-emerald-400 font-medium">
+              <Lock className="w-3 h-3" />
+              <span>TLS 1.3 Encrypted Session</span>
+            </span>
+            <span>·</span>
+            <p>© {new Date().getFullYear()} Switch 1.0 Initiative.</p>
+          </div>
+        </div>
+      </footer>
+    );
+  }
   return (
     <footer className="bg-switch-dark text-slate-300 border-t border-white/10 pt-16 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
