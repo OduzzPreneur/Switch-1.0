@@ -3,43 +3,70 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, Compass, Layers, ShieldCheck, HelpCircle, LogIn, ArrowRight, LayoutDashboard, LogOut } from 'lucide-react';
+import {
+  Menu,
+  X,
+  Compass,
+  Layers,
+  ShieldCheck,
+  HelpCircle,
+  LogIn,
+  ArrowRight,
+  LayoutDashboard,
+  LogOut,
+  User,
+  BookOpen,
+  GraduationCap,
+  Video,
+  FileCheck2,
+  CalendarDays,
+  Bell,
+  Download,
+  Lock,
+  ChevronRight,
+  Shield,
+  Briefcase,
+} from 'lucide-react';
 import SwitchLogo from '@/components/common/SwitchLogo';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
+import { getOrInitDefaultStudent } from '@/lib/portalState';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [studentSession, setStudentSession] = useState<{ fullName?: string; email?: string } | null>(null);
+  const [studentSession, setStudentSession] = useState<any | null>(null);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
-  // Track student session across localStorage and Supabase
+  const isDashboardRoute = pathname.startsWith('/dashboard');
+  const isAdminRoute = pathname.startsWith('/admin');
+  const isInstructorRoute = pathname.startsWith('/instructor');
+
+  // Track session across localStorage and Supabase
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('switch_student_session');
-      if (stored) {
-        try {
-          setStudentSession(JSON.parse(stored));
-        } catch (e) {
-          console.error(e);
-        }
-      } else {
-        setStudentSession(null);
-      }
+      const student = getOrInitDefaultStudent();
+      setStudentSession(student);
     }
 
     if (isSupabaseConfigured && supabase) {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session?.user) {
-          setStudentSession((prev) => prev || { email: session.user.email, fullName: session.user.user_metadata?.full_name });
+          setStudentSession((prev: any) => ({
+            ...prev,
+            email: session.user.email,
+            fullName: session.user.user_metadata?.full_name || prev?.fullName,
+          }));
         }
       });
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
         if (session?.user) {
-          setStudentSession((prev) => prev || { email: session.user.email, fullName: session.user.user_metadata?.full_name });
-        } else if (!localStorage.getItem('switch_student_session')) {
-          setStudentSession(null);
+          setStudentSession((prev: any) => ({
+            ...prev,
+            email: session.user.email,
+            fullName: session.user.user_metadata?.full_name || prev?.fullName,
+          }));
         }
       });
 
@@ -47,15 +74,19 @@ export default function Navbar() {
     }
   }, [pathname]);
 
-  // Automatically close mobile menu on route changes
+  // Automatically close mobile menu and notifications on route change
   useEffect(() => {
     setMobileMenuOpen(false);
+    setNotificationsOpen(false);
   }, [pathname]);
 
-  // Close mobile menu on Escape key press
+  // Close menus on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMobileMenuOpen(false);
+      if (e.key === 'Escape') {
+        setMobileMenuOpen(false);
+        setNotificationsOpen(false);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -73,130 +104,424 @@ export default function Navbar() {
     router.push('/login');
   };
 
-  const isAuthenticated = Boolean(studentSession || pathname === '/dashboard');
-  const isDashboard = pathname === '/dashboard';
+  const studentName = studentSession?.fullName || 'Student Fellow';
+  const studentInitial = studentName.charAt(0).toUpperCase();
+  const regNo = studentSession?.registrationNumber || 'SW1-2026-74651';
 
-  const navItems = [
+  // 1. STUDENT DASHBOARD NAVIGATION ITEMS (Exactly requested by user)
+  const studentNavItems = [
+    { label: 'Dashboard Overview', href: '/dashboard', icon: LayoutDashboard },
+    { label: 'My Profile', href: '/dashboard/profile', icon: User },
+    { label: 'Track Curriculum', href: '/dashboard?tab=curriculum', icon: BookOpen },
+    { label: 'Blueprint Courses', href: '/dashboard?tab=blueprint-courses', icon: GraduationCap },
+    { label: 'Session Recordings', href: '/dashboard?tab=session-recordings', icon: Video },
+    { label: 'Assessments', href: '/dashboard?tab=assessments', icon: FileCheck2 },
+    { label: 'Timetable & Venue', href: '/dashboard?tab=timetable', icon: CalendarDays },
+  ];
+
+  // 2. PUBLIC MARKETING NAVIGATION ITEMS
+  const publicNavItems = [
     { label: 'Overview', href: '/', icon: Compass },
     { label: '12 Tracks', href: '/#tracks', icon: Layers },
     { label: 'Eligibility', href: '/#eligibility', icon: ShieldCheck },
     { label: 'FAQs', href: '/#faqs', icon: HelpCircle },
-    ...(isAuthenticated
+    ...(studentSession
       ? [{ label: 'My Dashboard', href: '/dashboard', icon: LayoutDashboard }]
       : [{ label: 'Portal Login', href: '/login', icon: LogIn }]),
   ];
 
   return (
-    <nav className="bg-switch-dark text-white border-b border-white/10 sticky top-0 z-50 shadow-md backdrop-blur-md bg-switch-dark/95">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-[72px]">
-          
-          {/* Brand Logo Only */}
-          <Link href="/" className="flex items-center group py-1" aria-label="The Switch 1.0 Home">
-            <div className="transition-transform duration-200 group-hover:scale-105 drop-shadow-[0_2px_10px_rgba(255,94,20,0.25)]">
-              <SwitchLogo className="w-10 h-10 sm:w-11 sm:h-11" />
-            </div>
-          </Link>
-
-          {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center space-x-1 lg:space-x-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs lg:text-sm font-semibold transition-all ${
-                    isActive
-                      ? 'bg-switch-teal text-white shadow-sm'
-                      : 'text-slate-300 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5 text-switch-orange" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Right Action on Desktop */}
-          <div className="hidden md:flex items-center gap-3">
-            {isAuthenticated ? (
-              isDashboard ? (
+    <>
+      <nav className="bg-[#071E26] text-white border-b border-white/10 sticky top-0 z-50 shadow-md backdrop-blur-md bg-opacity-95">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 sm:h-[72px]">
+            
+            {/* Left: Logo & Portal Label */}
+            <div className="flex items-center gap-3">
+              {/* If on student dashboard, show hamburger on mobile & tablet right beside logo (3MTT style) */}
+              {isDashboardRoute && (
                 <button
-                  onClick={handleLogout}
-                  className="inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white text-xs lg:text-sm font-semibold px-4 py-2 rounded-xl transition-all border border-white/10"
+                  onClick={() => setMobileMenuOpen(true)}
+                  className="p-2 -ml-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 focus:outline-none transition-colors"
+                  aria-label="Open Student Portal Navigation Drawer"
                 >
-                  <LogOut className="w-3.5 h-3.5 text-rose-400" />
-                  <span>Sign Out</span>
+                  <Menu className="w-6 h-6 text-switch-teal" />
                 </button>
-              ) : (
+              )}
+
+              <Link href={isDashboardRoute ? "/dashboard" : "/"} className="flex items-center gap-2.5 group py-1" aria-label="Switch 1.0 Home">
+                <div className="transition-transform duration-200 group-hover:scale-105 drop-shadow-[0_2px_10px_rgba(255,94,20,0.25)]">
+                  <SwitchLogo className="w-9 h-9 sm:w-10 sm:h-10" />
+                </div>
+                {isDashboardRoute && (
+                  <span className="hidden sm:inline-block text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/10 text-emerald-300 border border-emerald-500/30">
+                    Student Portal
+                  </span>
+                )}
+              </Link>
+            </div>
+
+            {/* Desktop Navigation Links */}
+            {!isDashboardRoute ? (
+              // Public Navigation (for Landing / Marketing Pages)
+              <div className="hidden md:flex items-center space-x-1 lg:space-x-2">
+                {publicNavItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs lg:text-sm font-semibold transition-all ${
+                        isActive
+                          ? 'bg-switch-teal text-white shadow-sm'
+                          : 'text-slate-300 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5 text-switch-orange" />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : (
+              // In Student Dashboard Desktop: Quick links / Breadcrumb
+              <div className="hidden lg:flex items-center space-x-1">
                 <Link
                   href="/dashboard"
-                  className="inline-flex items-center gap-1.5 bg-switch-teal hover:bg-switch-teal-700 text-white text-xs lg:text-sm font-bold px-4 py-2.5 rounded-xl transition-all shadow-md shadow-teal-900/30 transform hover:-translate-y-0.5"
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                    pathname === '/dashboard' ? 'bg-switch-teal text-white' : 'text-slate-300 hover:text-white hover:bg-white/5'
+                  }`}
                 >
-                  <LayoutDashboard className="w-3.5 h-3.5 text-switch-orange" />
-                  <span>My Dashboard</span>
+                  Overview
                 </Link>
-              )
-            ) : (
-              <Link
-                href="/register"
-                className="inline-flex items-center gap-1.5 bg-gradient-to-r from-switch-orange to-orange-500 hover:from-switch-orange-600 hover:to-orange-600 text-white text-xs lg:text-sm font-bold px-4 py-2.5 rounded-xl transition-all shadow-md shadow-orange-500/20 transform hover:-translate-y-0.5"
-              >
-                <span>Register</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
+                <Link
+                  href="/dashboard/profile"
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                    pathname === '/dashboard/profile' ? 'bg-switch-teal text-white' : 'text-slate-300 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  My Profile
+                </Link>
+                <Link
+                  href="/dashboard?tab=curriculum"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
+                >
+                  Curriculum
+                </Link>
+                <Link
+                  href="/dashboard?tab=assessments"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
+                >
+                  Assessments
+                </Link>
+                <Link
+                  href="/dashboard?tab=timetable"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
+                >
+                  Timetable
+                </Link>
+              </div>
             )}
+
+            {/* Right Action Icons (3MTT Reference: Messages / Bell / Profile Avatar) */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              
+              {/* Role Switcher Pill for quick testing */}
+              <div className="hidden xl:flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10 text-[11px] font-semibold">
+                <Link
+                  href="/dashboard"
+                  className={`px-2 py-0.5 rounded-lg transition-colors ${
+                    isDashboardRoute ? 'bg-switch-teal text-white' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Student
+                </Link>
+                <Link
+                  href="/instructor"
+                  className={`px-2 py-0.5 rounded-lg transition-colors ${
+                    isInstructorRoute ? 'bg-amber-600 text-white' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Instructor
+                </Link>
+                <Link
+                  href="/admin"
+                  className={`px-2 py-0.5 rounded-lg transition-colors ${
+                    isAdminRoute ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Admin
+                </Link>
+              </div>
+
+              {isDashboardRoute ? (
+                // Authenticated Student Top Controls
+                <>
+                  {/* Notification Bell */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setNotificationsOpen(!notificationsOpen)}
+                      className="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 relative transition-colors"
+                      aria-label="View notifications"
+                    >
+                      <Bell className="w-5 h-5" />
+                      <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-switch-orange animate-pulse" />
+                    </button>
+
+                    {/* Notification Dropdown */}
+                    {notificationsOpen && (
+                      <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white text-slate-800 rounded-2xl shadow-2xl border border-slate-200 p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                          <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                            Cohort 1.0 Announcements
+                          </h4>
+                          <span className="text-[10px] bg-teal-50 text-switch-teal font-bold px-2 py-0.5 rounded-full border border-teal-200">
+                            2 New
+                          </span>
+                        </div>
+                        <div className="py-2 space-y-2 text-xs">
+                          <div className="p-2.5 rounded-xl bg-slate-50 hover:bg-teal-50/60 border border-slate-100 transition-colors">
+                            <span className="text-[10px] font-bold text-switch-teal block">Center Allocation</span>
+                            <p className="text-slate-700 font-medium mt-0.5">Physical centers and virtual live stream links now populated in Timetable & Venues.</p>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-slate-50 hover:bg-teal-50/60 border border-slate-100 transition-colors">
+                            <span className="text-[10px] font-bold text-switch-orange block">Assessment 1 Released</span>
+                            <p className="text-slate-700 font-medium mt-0.5">Course instructor published Practical Lab 1 load audit specifications.</p>
+                          </div>
+                        </div>
+                        <Link
+                          href="/dashboard?tab=timetable"
+                          onClick={() => setNotificationsOpen(false)}
+                          className="block text-center text-[11px] font-bold text-switch-teal hover:underline pt-2 border-t border-slate-100"
+                        >
+                          View all session updates
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Profile Avatar pill (Links directly to dedicated profile page) */}
+                  <Link
+                    href="/dashboard/profile"
+                    className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 transition-all group"
+                    title="Open Dedicated Profile"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-switch-teal to-emerald-400 text-white flex items-center justify-center font-black text-sm shadow-sm ring-1 ring-white/30">
+                      {studentInitial}
+                    </div>
+                    <div className="hidden sm:block text-left">
+                      <div className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors truncate max-w-[120px]">
+                        {studentName.split(' ')[0]}
+                      </div>
+                      <div className="text-[9px] text-slate-400 font-mono">
+                        {regNo}
+                      </div>
+                    </div>
+                  </Link>
+
+                  {/* Lock / Sign Out Button */}
+                  <button
+                    onClick={handleLogout}
+                    className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-950/30 transition-colors hidden sm:flex items-center justify-center"
+                    title="Lock / Sign Out"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </>
+              ) : (
+                // Public Header Actions
+                <div className="flex items-center gap-2">
+                  {studentSession ? (
+                    <Link
+                      href="/dashboard"
+                      className="inline-flex items-center gap-1.5 bg-switch-teal hover:bg-switch-teal-700 text-white text-xs lg:text-sm font-bold px-4 py-2 rounded-xl transition-all shadow-md"
+                    >
+                      <LayoutDashboard className="w-3.5 h-3.5 text-switch-orange" />
+                      <span>My Dashboard</span>
+                    </Link>
+                  ) : (
+                    <>
+                      <Link
+                        href="/login"
+                        className="text-xs font-semibold text-slate-300 hover:text-white px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        Sign In
+                      </Link>
+                      <Link
+                        href="/register"
+                        className="inline-flex items-center gap-1.5 bg-gradient-to-r from-switch-orange to-orange-500 hover:from-switch-orange-600 hover:to-orange-600 text-white text-xs lg:text-sm font-bold px-3.5 sm:px-4 py-2 rounded-xl transition-all shadow-md shadow-orange-500/20"
+                      >
+                        <span>Register</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </>
+                  )}
+
+                  {/* Public Mobile Menu Toggle */}
+                  <button
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 md:hidden focus:outline-none"
+                    aria-label="Toggle Navigation Menu"
+                  >
+                    {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                  </button>
+                </div>
+              )}
+
+            </div>
+
           </div>
-
-          {/* Mobile Right Controls */}
-          <div className="flex md:hidden items-center gap-2">
-            {/* Show Register ONLY if guest and NOT in dashboard */}
-            {!isAuthenticated && (
-              <Link
-                href="/register"
-                className="bg-switch-orange text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xs"
-              >
-                Register
-              </Link>
-            )}
-
-            {isAuthenticated && !isDashboard && (
-              <Link
-                href="/dashboard"
-                className="bg-switch-teal text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xs"
-              >
-                Dashboard
-              </Link>
-            )}
-
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 focus:outline-none"
-              aria-label="Toggle Navigation Menu"
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
-
         </div>
-      </div>
+      </nav>
 
-      {/* Mobile Floating Overlay Menu & Transparent Backdrop */}
-      {mobileMenuOpen && (
-        <>
+      {/* ========================================================================= */}
+      {/* 1. STUDENT DASHBOARD LEFT DRAWER (3MTT INSPIRED - IMAGE 3 REFERENCE)      */}
+      {/* ========================================================================= */}
+      {isDashboardRoute && mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 flex">
           {/* Dimmed Blurred Backdrop Scrim */}
+          <div
+            onClick={() => setMobileMenuOpen(false)}
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+            aria-hidden="true"
+          />
+
+          {/* Left Slide-out Solid Drawer */}
+          <div className="relative w-full max-w-[320px] bg-[#071E26] text-white flex flex-col h-full shadow-2xl border-r border-white/10 z-50 animate-in slide-in-from-left duration-250">
+            
+            {/* Top Drawer Header with Student Identity Card */}
+            <div className="p-5 border-b border-white/10 bg-slate-900/60">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <SwitchLogo className="w-8 h-8" />
+                  <span className="font-extrabold text-sm tracking-tight text-white">Switch 1.0 Portal</span>
+                </div>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Student Card Summary */}
+              <div className="flex items-center gap-3 bg-white/5 p-3 rounded-2xl border border-white/10">
+                <div className="w-12 h-12 rounded-xl bg-switch-teal text-white flex items-center justify-center font-black text-xl shadow-inner">
+                  {studentInitial}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold text-white truncate">{studentName}</div>
+                  <div className="text-[10px] text-emerald-400 font-mono">{regNo}</div>
+                  <span className="inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 mt-1">
+                    <ShieldCheck className="w-2.5 h-2.5 mr-1 text-emerald-400" />
+                    Verified Fellow
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation Drawer Menu Items (6 Modules + Profile) */}
+            <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+              <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-3 pb-2">
+                Student Navigation
+              </div>
+
+              {studentNavItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href || (item.href === '/dashboard' && pathname === '/dashboard');
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold transition-all ${
+                      isActive
+                        ? 'bg-switch-teal text-white shadow-md shadow-teal-900/40'
+                        : 'text-slate-300 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className={`w-4 h-4 ${isActive ? 'text-switch-orange' : 'text-slate-400'}`} />
+                      <span>{item.label}</span>
+                    </div>
+                    <ChevronRight className={`w-3.5 h-3.5 opacity-60 ${isActive ? 'text-white' : 'text-slate-500'}`} />
+                  </Link>
+                );
+              })}
+
+              {/* Portal Roles Switcher Section in Drawer for easy inspection */}
+              <div className="pt-4 mt-3 border-t border-white/10">
+                <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-3 pb-2">
+                  Switch Portal Views
+                </div>
+                <Link
+                  href="/instructor"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-amber-300 hover:bg-white/5 transition-colors"
+                >
+                  <Briefcase className="w-4 h-4 text-amber-400" />
+                  <span>Course Instructor Portal</span>
+                </Link>
+                <Link
+                  href="/admin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-purple-300 hover:bg-white/5 transition-colors"
+                >
+                  <Shield className="w-4 h-4 text-purple-400" />
+                  <span>Administrative Console</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Bottom Status Card (3MTT Reference Image 3) */}
+            <div className="p-4 border-t border-white/10 bg-slate-900/60 space-y-3">
+              <div className="p-3 bg-gradient-to-br from-emerald-950/60 to-slate-900 rounded-xl border border-emerald-500/20 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-white">Your Switch 1.0 Status</span>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-300">
+                    Active
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-300 leading-tight">
+                  Enrolled participant in Cohort 1.0. All course modules and timetable schedules are active.
+                </p>
+                <Link
+                  href="/dashboard/profile"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="mt-2 w-full inline-flex items-center justify-center gap-1.5 py-1.5 bg-switch-teal/40 hover:bg-switch-teal text-white rounded-lg text-xs font-bold transition-colors"
+                >
+                  <Download className="w-3 h-3" />
+                  <span>Save Registration Slip</span>
+                </Link>
+              </div>
+
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold text-rose-300 hover:text-white hover:bg-rose-900/40 border border-rose-500/20 transition-colors"
+              >
+                <Lock className="w-3.5 h-3.5 text-rose-400" />
+                <span>Sign Out / Lock Portal</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 2. PUBLIC MARKETING MOBILE MENU (Landing pages only)                      */}
+      {/* ========================================================================= */}
+      {!isDashboardRoute && mobileMenuOpen && (
+        <>
           <div
             onClick={() => setMobileMenuOpen(false)}
             className="fixed inset-0 top-16 sm:top-[72px] bg-slate-950/75 backdrop-blur-xs z-40 md:hidden animate-in fade-in duration-200"
             aria-hidden="true"
           />
 
-          {/* Floating Solid Menu Panel */}
           <div className="absolute top-full left-0 right-0 md:hidden bg-[#071E26] border-b border-white/15 px-4 pt-3 pb-4 space-y-1 shadow-2xl z-50 animate-in slide-in-from-top-2 duration-200">
-            {navItems.map((item) => {
+            {publicNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
               return (
@@ -216,18 +541,27 @@ export default function Navbar() {
               );
             })}
 
-            {isAuthenticated && (
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-sm font-medium text-rose-300 hover:text-rose-200 hover:bg-white/10 transition-colors pt-2 border-t border-white/10 mt-2 text-left"
+            <div className="pt-2 border-t border-white/10 mt-2 space-y-1">
+              <Link
+                href="/instructor"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold text-amber-300 hover:bg-white/10"
               >
-                <LogOut className="w-4 h-4 text-rose-400" />
-                <span>Sign Out / Lock</span>
-              </button>
-            )}
+                <Briefcase className="w-3.5 h-3.5 text-amber-400" />
+                <span>Instructor Portal</span>
+              </Link>
+              <Link
+                href="/admin"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold text-purple-300 hover:bg-white/10"
+              >
+                <Shield className="w-3.5 h-3.5 text-purple-400" />
+                <span>Admin Console</span>
+              </Link>
+            </div>
           </div>
         </>
       )}
-    </nav>
+    </>
   );
 }

@@ -109,3 +109,96 @@ INSERT INTO public.tracks (id, title, category, tagline, description, duration_w
 ('catering-craft', 'Commercial Culinary Arts & Baking', 'Vocational', 'Commercial baking, catering, and event food production.', 'High-standard food preparation and commercial pastry.', 10, ARRAY['Commercial Baking', 'Food Safety'], ARRAY['Industrial Ovens', 'Pastry Tools'], ARRAY['Pastry Chef', 'Caterer'])
 ON CONFLICT (id) DO NOTHING;
 
+-- 5. Instructors Table
+CREATE TABLE IF NOT EXISTS public.instructors (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  full_name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  phone TEXT NOT NULL,
+  track_id TEXT REFERENCES public.tracks(id) NOT NULL,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'suspended')),
+  bio TEXT,
+  experience_years INTEGER DEFAULT 0,
+  approved_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.instructors ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public read for approved instructors"
+  ON public.instructors FOR SELECT
+  TO public
+  USING (status = 'approved');
+
+-- 6. Student Attendance Table
+CREATE TABLE IF NOT EXISTS public.attendance (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  track_id TEXT REFERENCES public.tracks(id) NOT NULL,
+  session_date DATE NOT NULL,
+  session_week INTEGER NOT NULL,
+  session_title TEXT NOT NULL,
+  student_reg_no TEXT REFERENCES public.registrations(registration_number) ON DELETE CASCADE,
+  status TEXT NOT NULL CHECK (status IN ('present', 'late', 'absent')),
+  marked_by UUID REFERENCES public.instructors(id),
+  marked_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(track_id, session_date, student_reg_no)
+);
+
+ALTER TABLE public.attendance ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Students can view their own attendance"
+  ON public.attendance FOR SELECT
+  USING (
+    student_reg_no IN (
+      SELECT registration_number FROM public.registrations WHERE user_id = auth.uid()
+    )
+  );
+
+-- 7. Assessments Table
+CREATE TABLE IF NOT EXISTS public.assessments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  track_id TEXT REFERENCES public.tracks(id) NOT NULL,
+  week_number INTEGER NOT NULL,
+  title TEXT NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('Practical Lab', 'Capstone Project', 'Knowledge Check')),
+  description TEXT NOT NULL,
+  max_score INTEGER NOT NULL DEFAULT 100,
+  due_date TIMESTAMPTZ NOT NULL,
+  created_by UUID REFERENCES public.instructors(id),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.assessments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Enrolled students can view assessments for their track"
+  ON public.assessments FOR SELECT
+  TO public
+  USING (TRUE);
+
+-- 8. Assessment Submissions Table
+CREATE TABLE IF NOT EXISTS public.assessment_submissions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  assessment_id UUID REFERENCES public.assessments(id) ON DELETE CASCADE,
+  student_reg_no TEXT REFERENCES public.registrations(registration_number) ON DELETE CASCADE,
+  submission_url TEXT NOT NULL,
+  notes TEXT,
+  score INTEGER CHECK (score >= 0 AND score <= 100),
+  feedback TEXT,
+  status TEXT DEFAULT 'submitted' CHECK (status IN ('submitted', 'approved', 'needs_revision')),
+  submitted_at TIMESTAMPTZ DEFAULT NOW(),
+  graded_at TIMESTAMPTZ,
+  graded_by UUID REFERENCES public.instructors(id),
+  UNIQUE(assessment_id, student_reg_no)
+);
+
+ALTER TABLE public.assessment_submissions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Students can view their own submissions"
+  ON public.assessment_submissions FOR SELECT
+  USING (
+    student_reg_no IN (
+      SELECT registration_number FROM public.registrations WHERE user_id = auth.uid()
+    )
+  );
+
