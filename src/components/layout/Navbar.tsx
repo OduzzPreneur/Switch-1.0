@@ -45,8 +45,27 @@ export default function Navbar() {
   // Track session across localStorage and Supabase
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const student = getOrInitDefaultStudent();
-      setStudentSession(student);
+      const stored = localStorage.getItem('switch_student_session');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          // If stored is the auto-seeded mock student and we are on a public route, purge it so it doesn't pollute the general landing page
+          if (parsed?.paymentReference === 'PSTK-REF-74651-SWITCH' && !isDashboardRoute) {
+            localStorage.removeItem('switch_student_session');
+            setStudentSession(null);
+          } else {
+            setStudentSession(parsed);
+          }
+        } catch (e) {
+          setStudentSession(null);
+        }
+      } else if (isDashboardRoute) {
+        // Fallback demo student ONLY when actively inside the dashboard route for testing
+        const student = getOrInitDefaultStudent();
+        setStudentSession(student);
+      } else {
+        setStudentSession(null);
+      }
     }
 
     if (isSupabaseConfigured && supabase) {
@@ -67,12 +86,14 @@ export default function Navbar() {
             email: session.user.email,
             fullName: session.user.user_metadata?.full_name || prev?.fullName,
           }));
+        } else if (!isDashboardRoute) {
+          setStudentSession(null);
         }
       });
 
       return () => subscription.unsubscribe();
     }
-  }, [pathname]);
+  }, [pathname, isDashboardRoute]);
 
   // Automatically close mobile menu and notifications on route change
   useEffect(() => {
@@ -125,9 +146,7 @@ export default function Navbar() {
     { label: '12 Tracks', href: '/#tracks', icon: Layers },
     { label: 'Eligibility', href: '/#eligibility', icon: ShieldCheck },
     { label: 'FAQs', href: '/#faqs', icon: HelpCircle },
-    ...(studentSession
-      ? [{ label: 'My Dashboard', href: '/dashboard', icon: LayoutDashboard }]
-      : [{ label: 'Portal Login', href: '/login', icon: LogIn }]),
+    { label: 'Portal Login', href: '/login', icon: LogIn },
   ];
 
   return (
@@ -227,33 +246,35 @@ export default function Navbar() {
             {/* Right Action Icons (3MTT Reference: Messages / Bell / Profile Avatar) */}
             <div className="flex items-center gap-2 sm:gap-3">
               
-              {/* Role Switcher Pill for quick testing */}
-              <div className="hidden xl:flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10 text-[11px] font-semibold">
-                <Link
-                  href="/dashboard"
-                  className={`px-2 py-0.5 rounded-lg transition-colors ${
-                    isDashboardRoute ? 'bg-switch-teal text-white' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Student
-                </Link>
-                <Link
-                  href="/instructor"
-                  className={`px-2 py-0.5 rounded-lg transition-colors ${
-                    isInstructorRoute ? 'bg-amber-600 text-white' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Instructor
-                </Link>
-                <Link
-                  href="/admin"
-                  className={`px-2 py-0.5 rounded-lg transition-colors ${
-                    isAdminRoute ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Admin
-                </Link>
-              </div>
+              {/* Role Switcher Pill for quick testing (portals only) */}
+              {(isDashboardRoute || isAdminRoute || isInstructorRoute) && (
+                <div className="hidden xl:flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10 text-[11px] font-semibold">
+                  <Link
+                    href="/dashboard"
+                    className={`px-2 py-0.5 rounded-lg transition-colors ${
+                      isDashboardRoute ? 'bg-switch-teal text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Student
+                  </Link>
+                  <Link
+                    href="/instructor"
+                    className={`px-2 py-0.5 rounded-lg transition-colors ${
+                      isInstructorRoute ? 'bg-amber-600 text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Instructor
+                  </Link>
+                  <Link
+                    href="/admin"
+                    className={`px-2 py-0.5 rounded-lg transition-colors ${
+                      isAdminRoute ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Admin
+                  </Link>
+                </div>
+              )}
 
               {isDashboardRoute ? (
                 // Authenticated Student Top Controls
@@ -330,33 +351,22 @@ export default function Navbar() {
                   </button>
                 </>
               ) : (
-                // Public Header Actions
-                <div className="flex items-center gap-2">
-                  {studentSession ? (
-                    <Link
-                      href="/dashboard"
-                      className="inline-flex items-center gap-1.5 bg-switch-teal hover:bg-switch-teal-700 text-white text-xs lg:text-sm font-bold px-4 py-2 rounded-xl transition-all shadow-md"
-                    >
-                      <LayoutDashboard className="w-3.5 h-3.5 text-switch-orange" />
-                      <span>My Dashboard</span>
-                    </Link>
-                  ) : (
-                    <>
-                      <Link
-                        href="/login"
-                        className="text-xs font-semibold text-slate-300 hover:text-white px-3 py-1.5 rounded-lg transition-colors"
-                      >
-                        Sign In
-                      </Link>
-                      <Link
-                        href="/register"
-                        className="inline-flex items-center gap-1.5 bg-gradient-to-r from-switch-orange to-orange-500 hover:from-switch-orange-600 hover:to-orange-600 text-white text-xs lg:text-sm font-bold px-3.5 sm:px-4 py-2 rounded-xl transition-all shadow-md shadow-orange-500/20"
-                      >
-                        <span>Register</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
-                    </>
-                  )}
+                // Public Header Actions (Landing & Marketing pages)
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <Link
+                    href="/login"
+                    className="hidden sm:inline-flex text-xs font-semibold text-slate-300 hover:text-white px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    Portal Login
+                  </Link>
+
+                  <Link
+                    href="/register"
+                    className="inline-flex items-center gap-1.5 bg-gradient-to-r from-switch-orange to-orange-500 hover:from-switch-orange-600 hover:to-orange-600 text-white text-xs sm:text-sm font-bold px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all shadow-md shadow-orange-500/20 transform hover:-translate-y-0.5"
+                  >
+                    <span>Register</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
 
                   {/* Public Mobile Menu Toggle */}
                   <button
