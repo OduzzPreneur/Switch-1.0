@@ -211,11 +211,6 @@ export default function Navbar() {
                 <div className="transition-transform duration-200 group-hover:scale-105 drop-shadow-[0_2px_10px_rgba(255,94,20,0.25)]">
                   <SwitchLogo className="w-9 h-9 sm:w-10 sm:h-10" />
                 </div>
-                {isDashboardRoute && (
-                  <span className="hidden sm:inline-block text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/10 text-emerald-300 border border-emerald-500/30">
-                    Student Portal
-                  </span>
-                )}
               </Link>
             </div>
 
@@ -328,13 +323,6 @@ export default function Navbar() {
               ) : (
                 // Public Header Actions (Landing & Marketing pages)
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <Link
-                    href="/login"
-                    className="hidden sm:inline-flex text-xs font-semibold text-slate-300 hover:text-white px-3 py-1.5 rounded-lg transition-colors"
-                  >
-                    Portal Login
-                  </Link>
-
                   <Link
                     href="/register"
                     className="inline-flex items-center gap-1.5 bg-gradient-to-r from-switch-orange to-orange-500 hover:from-switch-orange-600 hover:to-orange-600 text-white text-xs sm:text-sm font-bold px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all shadow-md shadow-orange-500/20 transform hover:-translate-y-0.5"
