@@ -14,6 +14,12 @@ import {
   AssessmentSubmission,
 } from '@/lib/portalState';
 import {
+  syncFetchAttendance,
+  syncFetchAssessments,
+  syncFetchSubmissions,
+  syncSubmitAssessment,
+} from '@/lib/portalApi';
+import {
   User,
   ShieldCheck,
   CheckCircle2,
@@ -142,7 +148,7 @@ function DashboardContent() {
       if (isMounted && currentStudent) {
         setStudent(currentStudent);
 
-        // Load dynamic metrics
+        // Load dynamic metrics immediately from cache
         const att = getStudentAttendanceStats(currentStudent.registrationNumber);
         setAttendanceStats(att);
 
@@ -153,6 +159,24 @@ function DashboardContent() {
         setAssessmentStats(asm);
 
         setLoading(false);
+
+        // Fetch live database updates from Supabase
+        const regNo = currentStudent.registrationNumber;
+        const trackId = currentStudent.trackId;
+        Promise.all([
+          syncFetchAttendance(trackId, regNo),
+          syncFetchAssessments(trackId),
+          syncFetchSubmissions(regNo),
+        ]).then(() => {
+          if (isMounted) {
+            const freshAtt = getStudentAttendanceStats(regNo);
+            setAttendanceStats(freshAtt);
+            const freshAsm = getStudentAssessmentStats(regNo, trackId);
+            setAssessmentStats(freshAsm);
+          }
+        }).catch((syncErr) => {
+          console.warn('Dashboard live sync note:', syncErr);
+        });
       }
     }
 
@@ -173,13 +197,23 @@ function DashboardContent() {
     router.push('/login');
   };
 
-  const handleAssessmentSubmit = (e: React.FormEvent) => {
+  const handleAssessmentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAssessmentForSub || !student) return;
     setSubmitting(true);
 
     try {
+      // 1. Immediate local cache write
       submitAssessment(
+        selectedAssessmentForSub.id,
+        student.registrationNumber,
+        student.fullName,
+        submissionUrl.trim(),
+        submissionNotes.trim()
+      );
+
+      // 2. Live Supabase database sync
+      await syncSubmitAssessment(
         selectedAssessmentForSub.id,
         student.registrationNumber,
         student.fullName,

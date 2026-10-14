@@ -2,21 +2,25 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { TRACKS } from '@/data/tracks';
 import {
   getInstructors,
   getAttendanceRecords,
-  markBulkAttendance,
-  getAssessments,
-  createAssessment,
-  getSubmissions,
-  gradeSubmission,
+  getAssessments as getLocalAssessments,
+  getSubmissions as getLocalSubmissions,
   getOrInitDefaultStudent,
   Instructor,
   Assessment,
   AssessmentSubmission,
 } from '@/lib/portalState';
+import {
+  syncFetchAssessments,
+  syncCreateAssessment,
+  syncFetchSubmissions,
+  syncGradeSubmission,
+  syncMarkAttendance,
+} from '@/lib/portalApi';
 import {
   Briefcase,
   ShieldAlert,
@@ -33,12 +37,14 @@ import {
   ArrowRight,
   Shield,
   HelpCircle,
+  LogOut,
+  User,
 } from 'lucide-react';
 
 function InstructorPortalContent() {
-  const searchParams = useSearchParams();
-  const [instructors, setInstructors] = useState<Instructor[]>([]);
-  const [selectedInstructorId, setSelectedInstructorId] = useState<string>('');
+  const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [currentInstructor, setCurrentInstructor] = useState<Instructor | null>(null);
   const [activeTab, setActiveTab] = useState<'attendance' | 'assessments' | 'grade'>('attendance');
 
   // Attendance Form State
@@ -47,6 +53,7 @@ function InstructorPortalContent() {
   const [sessionTitle, setSessionTitle] = useState('Practical Workshop Lab 1');
   const [attendanceStatuses, setAttendanceStatuses] = useState<{ [regNo: string]: 'present' | 'late' | 'absent' }>({});
   const [attendanceNotice, setAttendanceNotice] = useState<string | null>(null);
+  const [isSavingAttendance, setIsSavingAttendance] = useState(false);
 
   // Create Assessment Form State
   const [newAsm, setNewAsm] = useState({
@@ -58,54 +65,85 @@ function InstructorPortalContent() {
     dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
   });
   const [assessmentNotice, setAssessmentNotice] = useState<string | null>(null);
+  const [isCreatingAsm, setIsCreatingAsm] = useState(false);
 
   // Grade Submissions State
   const [gradingScores, setGradingScores] = useState<{ [subId: string]: number }>({});
   const [gradingFeedbacks, setGradingFeedbacks] = useState<{ [subId: string]: string }>({});
   const [gradeNotice, setGradeNotice] = useState<string | null>(null);
+  const [isGrading, setIsGrading] = useState<string | null>(null);
+
+  // Live Data lists
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [submissions, setSubmissions] = useState<AssessmentSubmission[]>([]);
 
   // Load registered student roster
   const [studentRoster, setStudentRoster] = useState<any[]>([]);
 
+  // 1. Check Instructor Auth Session
   useEffect(() => {
-    const instList = getInstructors();
-    setInstructors(instList);
-
-    const asParam = searchParams.get('as');
-    if (asParam && instList.some((i) => i.id === asParam)) {
-      setSelectedInstructorId(asParam);
-    } else if (instList.length > 0) {
-      setSelectedInstructorId(instList[0].id);
+    if (typeof window !== 'undefined') {
+      const sessionStr = localStorage.getItem('switch_instructor_session');
+      if (!sessionStr) {
+        router.replace('/instructor/login');
+        return;
+      }
+      try {
+        const parsed = JSON.parse(sessionStr);
+        if (!parsed.authenticated || !parsed.instructor) {
+          router.replace('/instructor/login');
+          return;
+        }
+        setCurrentInstructor(parsed.instructor);
+        setCheckingAuth(false);
+      } catch {
+        router.replace('/instructor/login');
+        return;
+      }
     }
+  }, [router]);
 
-    const defaultStd = getOrInitDefaultStudent();
-    if (defaultStd) {
-      setStudentRoster([
-        defaultStd,
-        {
-          fullName: 'Adekoya Michael',
-          registrationNumber: 'SW1-2026-88192',
-          trackId: defaultStd.trackId,
-          learningMode: 'Physical Center / Hybrid',
-        },
-      ]);
+  // 2. Load dynamic assessments & submissions from Supabase/cache
+  useEffect(() => {
+    if (!checkingAuth && currentInstructor) {
+      syncFetchAssessments(currentInstructor.trackId).then((asms) => setAssessments(asms));
+      syncFetchSubmissions().then((subs) => setSubmissions(subs));
 
-      // Initialize default attendance
-      setAttendanceStatuses({
-        [defaultStd.registrationNumber]: 'present',
-        'SW1-2026-88192': 'present',
-      });
+      const defaultStd = getOrInitDefaultStudent();
+      if (defaultStd) {
+        setStudentRoster([
+          defaultStd,
+          {
+            fullName: 'Adekoya Michael',
+            registrationNumber: 'SW1-2026-88192',
+            trackId: currentInstructor.trackId,
+            learningMode: 'Physical Center / Hybrid',
+          },
+        ]);
+
+        setAttendanceStatuses({
+          [defaultStd.registrationNumber]: 'present',
+          'SW1-2026-88192': 'present',
+        });
+      }
     }
-  }, [searchParams]);
+  }, [checkingAuth, currentInstructor]);
 
-  const currentInstructor = instructors.find((i) => i.id === selectedInstructorId);
+  const handleInstructorLogout = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('switch_instructor_session');
+    }
+    router.replace('/instructor/login');
+  };
+
   const isApproved = currentInstructor?.status === 'approved';
   const assignedTrack = TRACKS.find((t) => t.id === currentInstructor?.trackId) || TRACKS[0];
 
-  // 1. Submit Attendance Handler
-  const handleSaveAttendance = (e: React.FormEvent) => {
+  // 1. Submit Attendance Handler with live Supabase sync
+  const handleSaveAttendance = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentInstructor || !isApproved) return;
+    setIsSavingAttendance(true);
 
     const entries = studentRoster.map((std) => ({
       studentRegNo: std.registrationNumber,
@@ -113,117 +151,133 @@ function InstructorPortalContent() {
       status: attendanceStatuses[std.registrationNumber] || 'present',
     }));
 
-    markBulkAttendance(
-      assignedTrack.id,
-      sessionDate,
-      Number(sessionWeek),
-      sessionTitle,
-      currentInstructor.id,
-      entries
-    );
+    try {
+      await syncMarkAttendance(
+        assignedTrack.id,
+        sessionDate,
+        Number(sessionWeek),
+        sessionTitle,
+        currentInstructor.id,
+        entries
+      );
 
-    setAttendanceNotice(
-      `✓ Attendance for "${sessionTitle}" recorded successfully for ${entries.length} student(s)! Student progress bars have been updated.`
-    );
-    setTimeout(() => setAttendanceNotice(null), 5000);
+      setAttendanceNotice(
+        `✓ Attendance for "${sessionTitle}" recorded successfully for ${entries.length} student(s)! Student progress bars have been updated.`
+      );
+      setTimeout(() => setAttendanceNotice(null), 6000);
+    } finally {
+      setIsSavingAttendance(false);
+    }
   };
 
-  // 2. Create Assessment Handler
-  const handleCreateAssessment = (e: React.FormEvent) => {
+  // 2. Create Assessment Handler with live Supabase sync
+  const handleCreateAssessment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentInstructor || !isApproved || !newAsm.title) return;
+    setIsCreatingAsm(true);
 
-    createAssessment({
-      trackId: assignedTrack.id,
-      weekNumber: Number(newAsm.weekNumber),
-      title: newAsm.title.trim(),
-      type: newAsm.type,
-      description: newAsm.description.trim(),
-      maxScore: Number(newAsm.maxScore) || 100,
-      dueDate: new Date(newAsm.dueDate).toISOString(),
-      createdByInstructorId: currentInstructor.id,
-    });
+    try {
+      await syncCreateAssessment({
+        trackId: assignedTrack.id,
+        weekNumber: Number(newAsm.weekNumber),
+        title: newAsm.title.trim(),
+        type: newAsm.type,
+        description: newAsm.description.trim(),
+        maxScore: Number(newAsm.maxScore) || 100,
+        dueDate: new Date(newAsm.dueDate).toISOString(),
+        createdByInstructorId: currentInstructor.id,
+      });
 
-    setAssessmentNotice(`✓ New assessment "${newAsm.title}" published! Students in ${assignedTrack.title} can now view and submit this deliverable.`);
-    setNewAsm({
-      weekNumber: 2,
-      title: '',
-      type: 'Practical Lab',
-      description: '',
-      maxScore: 100,
-      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    });
-    setTimeout(() => setAssessmentNotice(null), 5000);
+      const updatedAsms = await syncFetchAssessments(assignedTrack.id);
+      setAssessments(updatedAsms);
+
+      setAssessmentNotice(`✓ New assessment "${newAsm.title}" published! Students in ${assignedTrack.title} can now view and submit this deliverable.`);
+      setNewAsm({
+        weekNumber: Number(newAsm.weekNumber) + 1,
+        title: '',
+        type: 'Practical Lab',
+        description: '',
+        maxScore: 100,
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      });
+      setTimeout(() => setAssessmentNotice(null), 6000);
+    } finally {
+      setIsCreatingAsm(false);
+    }
   };
 
-  // 3. Grade Submission Handler
-  const handleGradeSubmission = (submissionId: string) => {
+  // 3. Grade Submission Handler with live Supabase sync
+  const handleGradeSubmission = async (submissionId: string) => {
     if (!currentInstructor || !isApproved) return;
+    setIsGrading(submissionId);
+
     const score = gradingScores[submissionId] ?? 90;
     const feedback = gradingFeedbacks[submissionId] ?? 'Well done on completing the practical lab requirements. Specifications and calculations are verified.';
 
-    gradeSubmission(submissionId, score, feedback, currentInstructor.id);
-    setGradeNotice(`✓ Assessment approved with grade ${score}/100! The student's "Approved Assessments" card now reflects this achievement.`);
-    setTimeout(() => setGradeNotice(null), 5000);
+    try {
+      await syncGradeSubmission(submissionId, score, feedback, currentInstructor.id);
+      const updatedSubs = await syncFetchSubmissions();
+      setSubmissions(updatedSubs);
+
+      setGradeNotice(`✓ Assessment approved with grade ${score}/100! The student's "Approved Assessments" card now reflects this achievement.`);
+      setTimeout(() => setGradeNotice(null), 6000);
+    } finally {
+      setIsGrading(null);
+    }
   };
 
-  const assessments = getAssessments(assignedTrack.id);
-  const submissions = getSubmissions();
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-10 h-10 border-3 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs uppercase tracking-widest font-bold text-slate-400">Verifying Faculty Authorization...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-100/70 pb-20 pt-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         
-        {/* Top Header with Instructor Profile Switcher */}
+        {/* Top Header with Authenticated Instructor Profile */}
         <div className="bg-[#071E26] text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/30">
                 <Briefcase className="w-3.5 h-3.5" />
-                <span>Switch 1.0 Faculty & Instructors</span>
+                <span>Switch 1.0 Faculty Portal</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
                 Course Instructor Workspace
               </h1>
               <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-                Record weekly student attendance, publish practical lab assignments, and grade student submissions.
+                Record weekly student attendance, publish practical lab assignments, and grade deliverables for {assignedTrack.title}.
               </p>
             </div>
 
-            {/* Instructor Account Switcher & Fast Links */}
-            <div className="space-y-2 shrink-0">
-              <label className="block text-[11px] font-bold text-slate-400 uppercase">
-                Active Instructor Account:
-              </label>
-              <select
-                value={selectedInstructorId}
-                onChange={(e) => setSelectedInstructorId(e.target.value)}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-900 border border-white/20 text-white font-bold text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
-              >
-                {instructors.map((inst) => (
-                  <option key={inst.id} value={inst.id}>
-                    {inst.fullName} ({inst.status.toUpperCase()})
-                  </option>
-                ))}
-              </select>
-
-              <div className="pt-1 flex items-center gap-2">
-                <Link
-                  href="/admin"
-                  className="text-[11px] font-bold text-purple-300 hover:underline flex items-center gap-1"
-                >
-                  <Shield className="w-3 h-3" />
-                  <span>Admin Console</span>
-                </Link>
-                <span className="text-slate-500">•</span>
-                <Link
-                  href="/dashboard"
-                  className="text-[11px] font-bold text-emerald-300 hover:underline flex items-center gap-1"
-                >
-                  <span>Student Portal</span>
-                  <ExternalLink className="w-3 h-3" />
-                </Link>
+            {/* Authenticated Instructor Profile & Logout Button */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 shrink-0">
+              <div className="bg-white/10 backdrop-blur-xs border border-white/15 px-3.5 py-2.5 rounded-2xl flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+                  {currentInstructor?.fullName.charAt(0)}
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white leading-tight">{currentInstructor?.fullName}</div>
+                  <div className="text-[10px] text-amber-300 font-semibold">{currentInstructor?.email}</div>
+                  <div className="text-[9px] text-slate-300 font-mono mt-0.5">{assignedTrack.title}</div>
+                </div>
               </div>
+
+              <button
+                onClick={handleInstructorLogout}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-bold transition-colors shadow-2xs"
+                title="Sign out of Faculty Workspace"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign Out</span>
+              </button>
             </div>
           </div>
         </div>
@@ -239,26 +293,26 @@ function InstructorPortalContent() {
               </div>
               <div className="space-y-2">
                 <div className="inline-flex items-center text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900">
-                  Status: Pending Administrative Approval
+                  Status: Pending Administrative Review
                 </div>
                 <h3 className="text-lg font-black text-amber-950">
-                  Account Locked: Administrative Review Required
+                  Account Pending Administrative Verification
                 </h3>
                 <p className="text-xs sm:text-sm text-amber-900 leading-relaxed max-w-2xl">
-                  Instructor <strong>{currentInstructor?.fullName}</strong> has registered for the <strong>{assignedTrack.title}</strong> track, but this account has not yet been approved by the Switch 1.0 central administrator.
+                  Instructor <strong>{currentInstructor?.fullName}</strong> has been registered for the <strong>{assignedTrack.title}</strong> track, but this faculty account has not yet been approved by the Switch 1.0 central administration.
                 </p>
                 <p className="text-xs text-amber-800 font-medium">
-                  Once an administrator approves your account in the Admin Console, attendance marking and assessment evaluation tools will automatically unlock.
+                  Once an administrator approves your profile, attendance marking and assessment evaluation tools will automatically unlock on this page.
                 </p>
 
-                <div className="pt-3">
-                  <Link
-                    href="/admin"
-                    className="inline-flex items-center gap-2 bg-purple-700 hover:bg-purple-800 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition-colors shadow-sm"
+                <div className="pt-3 flex items-center gap-3">
+                  <button
+                    onClick={handleInstructorLogout}
+                    className="inline-flex items-center gap-2 bg-slate-900 hover:bg-black text-white font-bold px-5 py-2.5 rounded-xl text-xs transition-colors shadow-sm"
                   >
-                    <Shield className="w-4 h-4" />
-                    <span>Go to Admin Console to Approve this Instructor</span>
-                  </Link>
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Return to Login</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -462,10 +516,20 @@ function InstructorPortalContent() {
                   <div className="pt-2">
                     <button
                       type="submit"
-                      className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold px-6 py-3 rounded-xl text-xs transition-all shadow-md"
+                      disabled={isSavingAttendance}
+                      className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold px-6 py-3 rounded-xl text-xs transition-all shadow-md disabled:opacity-60"
                     >
-                      <CalendarCheck className="w-4 h-4" />
-                      <span>Save & Submit Attendance Register</span>
+                      {isSavingAttendance ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Saving Register to Database...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CalendarCheck className="w-4 h-4" />
+                          <span>Save & Submit Attendance Register</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </form>
@@ -575,10 +639,20 @@ function InstructorPortalContent() {
                     <div className="pt-2">
                       <button
                         type="submit"
-                        className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold px-6 py-3 rounded-xl transition-all shadow-md"
+                        disabled={isCreatingAsm}
+                        className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold px-6 py-3 rounded-xl transition-all shadow-md disabled:opacity-60"
                       >
-                        <Send className="w-4 h-4" />
-                        <span>Publish Assessment to Student Dashboard</span>
+                        {isCreatingAsm ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>Publishing to Student Dashboard...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4" />
+                            <span>Publish Assessment to Student Dashboard</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   </form>
@@ -731,9 +805,17 @@ function InstructorPortalContent() {
                             <button
                               type="button"
                               onClick={() => handleGradeSubmission(sub.id)}
-                              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-all shadow-sm shrink-0"
+                              disabled={isGrading === sub.id}
+                              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-all shadow-sm shrink-0 flex items-center justify-center gap-1.5"
                             >
-                              {isApprovedSub ? 'Update Grade' : 'Approve & Record Grade'}
+                              {isGrading === sub.id ? (
+                                <>
+                                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                  <span>Recording...</span>
+                                </>
+                              ) : (
+                                <span>{isApprovedSub ? 'Update Grade' : 'Approve & Record Grade'}</span>
+                              )}
                             </button>
                           </div>
                         </div>

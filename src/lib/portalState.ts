@@ -242,12 +242,14 @@ export function suspendInstructor(id: string): Instructor[] {
   return updated;
 }
 
-export function addInstructor(data: Omit<Instructor, 'id' | 'status' | 'createdAt'>): Instructor {
+export function addInstructor(
+  data: Omit<Instructor, 'id' | 'status' | 'createdAt'> & { status?: 'pending' | 'approved' | 'suspended' }
+): Instructor {
   const current = getInstructors();
   const newInstructor: Instructor = {
     ...data,
     id: `inst-${Date.now()}`,
-    status: 'pending',
+    status: data.status || 'approved',
     createdAt: new Date().toISOString(),
   };
   saveInstructors([newInstructor, ...current]);

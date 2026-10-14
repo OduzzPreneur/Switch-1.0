@@ -2,17 +2,20 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { TRACKS } from '@/data/tracks';
 import {
   getInstructors,
-  approveInstructor,
-  suspendInstructor,
-  addInstructor,
   getAttendanceRecords,
   getSubmissions,
   getOrInitDefaultStudent,
   Instructor,
 } from '@/lib/portalState';
+import {
+  syncFetchInstructors,
+  syncCreateInstructor,
+  syncUpdateInstructorStatus,
+} from '@/lib/portalApi';
 import {
   Shield,
   ShieldCheck,
@@ -30,9 +33,15 @@ import {
   Award,
   Layers,
   Calendar,
+  LogOut,
+  Key,
 } from 'lucide-react';
 
 export default function AdminPage() {
+  const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [adminEmail, setAdminEmail] = useState('');
+
   const [instructors, setInstructors] = useState<Instructor[]>([]);
   const [activeTab, setActiveTab] = useState<'instructors' | 'students'>('instructors');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved'>('all');
@@ -40,10 +49,12 @@ export default function AdminPage() {
   
   // Add Instructor Modal
   const [showAddModal, setShowAddModal] = useState(false);
+  const [isSubmittingInst, setIsSubmittingInst] = useState(false);
   const [newInstData, setNewInstData] = useState({
     fullName: '',
     email: '',
     phone: '',
+    password: 'Switch2026!',
     trackId: TRACKS[0].id,
     bio: '',
     experienceYears: 5,
@@ -51,51 +62,112 @@ export default function AdminPage() {
 
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
-  // Load Data
+  // Check Admin Session Guard
   useEffect(() => {
-    const list = getInstructors();
-    setInstructors(list);
-  }, []);
+    if (typeof window !== 'undefined') {
+      const sessionStr = localStorage.getItem('switch_admin_session');
+      if (!sessionStr) {
+        router.replace('/admin/login');
+        return;
+      }
+      try {
+        const parsed = JSON.parse(sessionStr);
+        if (!parsed.authenticated) {
+          router.replace('/admin/login');
+          return;
+        }
+        setAdminEmail(parsed.email || 'admin@switch.ng');
+      } catch {
+        router.replace('/admin/login');
+        return;
+      }
+      setCheckingAuth(false);
+    }
+  }, [router]);
 
-  const handleApprove = (id: string, name: string) => {
-    const updated = approveInstructor(id);
+  // Load Instructors with Supabase sync + local fallback
+  useEffect(() => {
+    if (!checkingAuth) {
+      syncFetchInstructors().then((list) => {
+        setInstructors(list);
+      });
+    }
+  }, [checkingAuth]);
+
+  const handleAdminLogout = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('switch_admin_session');
+    }
+    router.replace('/admin/login');
+  };
+
+  const handleApprove = async (id: string, name: string) => {
+    await syncUpdateInstructorStatus(id, 'approved');
+    const updated = await syncFetchInstructors();
     setInstructors(updated);
     setActionNotice(`Instructor ${name} has been approved! They can now access attendance and assessments in the instructor portal.`);
-    setTimeout(() => setActionNotice(null), 5000);
+    setTimeout(() => setActionNotice(null), 6000);
   };
 
-  const handleSuspend = (id: string, name: string) => {
-    const updated = suspendInstructor(id);
+  const handleSuspend = async (id: string, name: string) => {
+    await syncUpdateInstructorStatus(id, 'suspended');
+    const updated = await syncFetchInstructors();
     setInstructors(updated);
     setActionNotice(`Instructor ${name} access has been suspended.`);
-    setTimeout(() => setActionNotice(null), 5000);
+    setTimeout(() => setActionNotice(null), 6000);
   };
 
-  const handleAddInstructor = (e: React.FormEvent) => {
+  const handleOpenAsInstructor = (inst: Instructor) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(
+        'switch_instructor_session',
+        JSON.stringify({
+          authenticated: true,
+          instructor: inst,
+          token: `switch_inst_token_${Date.now()}`,
+        })
+      );
+    }
+    router.push('/instructor');
+  };
+
+  const handleAddInstructor = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newInstData.fullName || !newInstData.email) return;
 
-    const created = addInstructor({
-      fullName: newInstData.fullName.trim(),
-      email: newInstData.email.trim(),
-      phone: newInstData.phone.trim(),
-      trackId: newInstData.trackId,
-      bio: newInstData.bio.trim(),
-      experienceYears: Number(newInstData.experienceYears) || 3,
-    });
+    setIsSubmittingInst(true);
+    try {
+      const passToUse = newInstData.password.trim() || 'Switch2026!';
+      const created = await syncCreateInstructor({
+        fullName: newInstData.fullName.trim(),
+        email: newInstData.email.trim(),
+        phone: newInstData.phone.trim(),
+        trackId: newInstData.trackId,
+        password: passToUse,
+        bio: newInstData.bio.trim(),
+        experienceYears: Number(newInstData.experienceYears) || 3,
+        status: 'approved', // Method A: Admin directly provisions approved faculty
+      });
 
-    setInstructors(getInstructors());
-    setShowAddModal(false);
-    setNewInstData({
-      fullName: '',
-      email: '',
-      phone: '',
-      trackId: TRACKS[0].id,
-      bio: '',
-      experienceYears: 5,
-    });
-    setActionNotice(`New instructor ${created.fullName} added (Pending approval).`);
-    setTimeout(() => setActionNotice(null), 5000);
+      const freshList = await syncFetchInstructors();
+      setInstructors(freshList);
+      setShowAddModal(false);
+      setActionNotice(
+        `✓ Provisioned ${created.fullName}! Credentials: Email: ${created.email} | Passcode: ${passToUse}. Login active at /instructor/login.`
+      );
+      setNewInstData({
+        fullName: '',
+        email: '',
+        phone: '',
+        password: 'Switch2026!',
+        trackId: TRACKS[0].id,
+        bio: '',
+        experienceYears: 5,
+      });
+      setTimeout(() => setActionNotice(null), 10000);
+    } finally {
+      setIsSubmittingInst(false);
+    }
   };
 
   // Metrics
@@ -114,6 +186,17 @@ export default function AdminPage() {
     return matchesStatus && matchesSearch;
   });
 
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-10 h-10 border-3 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs uppercase tracking-widest font-bold text-slate-400">Verifying Admin Credentials...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-100/70 pb-20 pt-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
@@ -130,26 +213,30 @@ export default function AdminPage() {
                 Admin Management Console
               </h1>
               <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-                Approve course instructors, assign tracks, and oversee student attendance and assessment registers across all 12 tracks.
+                Approve course instructors, assign tracks, provision faculty credentials, and oversee attendance across all 12 tracks.
               </p>
             </div>
 
-            {/* Quick Link pills to other portals */}
-            <div className="flex flex-wrap items-center gap-2">
-              <Link
-                href="/instructor"
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors shadow-sm"
+            {/* Admin Profile & Logout Control */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 shrink-0">
+              <div className="bg-white/10 backdrop-blur-xs border border-white/15 px-3.5 py-2 rounded-2xl flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-purple-500 text-white flex items-center justify-center font-bold text-xs">
+                  ADM
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white leading-tight">{adminEmail || 'admin@switch.ng'}</div>
+                  <div className="text-[10px] text-purple-300 font-semibold">Master Administrator</div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleAdminLogout}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-bold transition-colors shadow-2xs"
+                title="Sign out of Admin Console"
               >
-                <span>Instructor View</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-switch-teal hover:bg-switch-teal-700 text-white text-xs font-bold transition-colors shadow-sm"
-              >
-                <span>Student Portal</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign Out</span>
+              </button>
             </div>
           </div>
 
@@ -355,14 +442,14 @@ export default function AdminPage() {
                             </div>
                           )}
 
-                          <Link
-                            href={`/instructor?as=${inst.id}`}
-                            className="px-3 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold inline-flex items-center gap-1 transition-colors"
-                            title="Simulate Instructor Login"
+                          <button
+                            onClick={() => handleOpenAsInstructor(inst)}
+                            className="px-3 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
+                            title="Launch Instructor Workspace as this instructor"
                           >
-                            <span>Open as Instructor</span>
+                            <span>Launch Workspace</span>
                             <ExternalLink className="w-3 h-3 text-slate-400" />
-                          </Link>
+                          </button>
                         </div>
                       </div>
                     );
@@ -422,10 +509,10 @@ export default function AdminPage() {
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
                 <h3 className="text-lg font-black text-slate-900">
-                  Register New Course Instructor
+                  Provision New Course Instructor
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Instructor applicants require admin approval before unlocking teaching tools.
+                  Direct Admin Provisioning: Assign course track and set the instructor login passcode.
                 </p>
               </div>
               <button
@@ -481,21 +568,38 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 uppercase mb-1">
-                  Assigned Teaching Track
-                </label>
-                <select
-                  value={newInstData.trackId}
-                  onChange={(e) => setNewInstData({ ...newInstData, trackId: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-600 text-slate-900 font-medium"
-                >
-                  {TRACKS.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.title} ({t.category})
-                    </option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-slate-700 uppercase mb-1">
+                    Assigned Teaching Track
+                  </label>
+                  <select
+                    value={newInstData.trackId}
+                    onChange={(e) => setNewInstData({ ...newInstData, trackId: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-600 text-slate-900 font-medium"
+                  >
+                    {TRACKS.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.title} ({t.category})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 uppercase mb-1 flex items-center justify-between">
+                    <span>Login Passcode</span>
+                    <span className="text-[10px] text-purple-600 font-bold lowercase">default: Switch2026!</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Switch2026!"
+                    value={newInstData.password}
+                    onChange={(e) => setNewInstData({ ...newInstData, password: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-600 text-slate-900 font-mono font-bold"
+                  />
+                </div>
               </div>
 
               <div>
@@ -503,7 +607,7 @@ export default function AdminPage() {
                   Professional Bio & Technical Background
                 </label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   placeholder="Summary of practical field expertise, previous projects, certifications..."
                   value={newInstData.bio}
                   onChange={(e) => setNewInstData({ ...newInstData, bio: e.target.value })}
@@ -511,19 +615,32 @@ export default function AdminPage() {
                 />
               </div>
 
+              <div className="p-3 bg-purple-50 rounded-xl border border-purple-200 text-purple-900 text-[11px] leading-relaxed">
+                <strong>Method A Active:</strong> The instructor will be provisioned directly with active approval. They can immediately log in at <code className="bg-purple-100 px-1 py-0.5 rounded text-purple-800 font-mono">/instructor/login</code> with the email and passcode specified above.
+              </div>
+
               <div className="flex items-center justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
                   className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50"
+                  disabled={isSubmittingInst}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold transition-all shadow-sm"
+                  disabled={isSubmittingInst}
+                  className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold transition-all shadow-sm flex items-center gap-1.5"
                 >
-                  Submit Application
+                  {isSubmittingInst ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Provisioning...</span>
+                    </>
+                  ) : (
+                    <span>Provision & Authorize</span>
+                  )}
                 </button>
               </div>
             </form>
