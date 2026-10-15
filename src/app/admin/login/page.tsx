@@ -34,7 +34,13 @@ export default function AdminLoginPage() {
 
       // Store authenticated admin session
       if (typeof window !== 'undefined') {
-        localStorage.setItem('switch_admin_session', JSON.stringify(data.admin));
+        localStorage.setItem(
+          'switch_admin_session',
+          JSON.stringify({
+            authenticated: true,
+            ...data.admin,
+          })
+        );
       }
 
       router.push('/admin');

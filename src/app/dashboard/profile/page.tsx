@@ -127,8 +127,8 @@ export default function StudentProfilePage() {
       // 2. Fallback to localStorage session
       if (typeof window !== 'undefined' && isMounted) {
         const studentObj = getOrInitDefaultStudent();
-        setStudent(studentObj);
         if (studentObj) {
+          setStudent(studentObj);
           setFormData({
             fullName: studentObj.fullName || '',
             phone: studentObj.phone || '',
@@ -138,8 +138,10 @@ export default function StudentProfilePage() {
             emergencyContact: studentObj.emergencyContact || '',
             bio: studentObj.bio || '',
           });
+          setLoading(false);
+        } else {
+          router.replace('/login');
         }
-        setLoading(false);
       }
     }
 
@@ -148,7 +150,7 @@ export default function StudentProfilePage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [router]);
 
   const enrolledTrack = TRACKS.find((t) => t.id === student?.trackId) || TRACKS[0];
 

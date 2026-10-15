@@ -1,11 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase/admin';
+import { getAuthContext } from '@/lib/auth/session';
 
 export async function GET(req: NextRequest) {
   try {
+    const auth = await getAuthContext(req);
+
+    if (!auth) {
+      return NextResponse.json(
+        { success: false, message: 'Authentication required to view assessment submissions.' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
-    const regNo = searchParams.get('regNo');
+    let regNo = searchParams.get('regNo');
     const assessmentId = searchParams.get('assessmentId');
+
+    // Students may only view their own submissions
+    if (auth.role === 'student') {
+      const studentReg = auth.session.registrationNumber || regNo;
+      if (!studentReg) {
+        return NextResponse.json(
+          { success: false, message: 'Student registration identity missing.' },
+          { status: 400 }
+        );
+      }
+      regNo = studentReg;
+    }
 
     if (isSupabaseAdminConfigured && supabaseAdmin) {
       let query = supabaseAdmin.from('assessment_submissions').select('*');
@@ -19,7 +41,7 @@ export async function GET(req: NextRequest) {
 
       const { data, error } = await query.order('submitted_at', { ascending: false });
 
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         return NextResponse.json({ success: true, submissions: data });
       }
     }
@@ -28,6 +50,7 @@ export async function GET(req: NextRequest) {
       success: true,
       fallback: true,
       message: 'Using local submissions fallback.',
+      submissions: [],
     });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
@@ -36,6 +59,15 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await getAuthContext(req);
+
+    if (!auth) {
+      return NextResponse.json(
+        { success: false, message: 'Authentication required to submit assessments.' },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
     const { assessmentId, studentRegNo, submissionUrl, notes } = body;
 
@@ -43,6 +75,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { success: false, message: 'Assessment ID, student registration number, and submission URL are required.' },
         { status: 400 }
+      );
+    }
+
+    // Prevent submitting as another student
+    if (auth.role === 'student' && auth.session.registrationNumber && auth.session.registrationNumber !== studentRegNo) {
+      return NextResponse.json(
+        { success: false, message: 'You are not authorized to submit work under another student registration number.' },
+        { status: 403 }
       );
     }
 
@@ -84,6 +124,16 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    const auth = await getAuthContext(req);
+
+    // Only instructors and administrators may grade submissions
+    if (!auth || (auth.role !== 'instructor' && auth.role !== 'admin')) {
+      return NextResponse.json(
+        { success: false, message: 'Only instructors and administrators can grade submissions.' },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const { submissionId, score, feedback, status } = body;
 
@@ -99,6 +149,7 @@ export async function PATCH(req: NextRequest) {
       feedback: feedback?.trim() || '',
       status: status || 'approved',
       graded_at: new Date().toISOString(),
+      graded_by: auth.session.userId,
     };
 
     if (isSupabaseAdminConfigured && supabaseAdmin) {

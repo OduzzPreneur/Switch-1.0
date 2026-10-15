@@ -370,7 +370,7 @@ export async function syncUpdateInstructorStatus(
     await fetch('/api/portal/instructors', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ instructorId: id, status }),
+      body: JSON.stringify({ id, instructorId: id, status }),
     });
   } catch (err) {
     console.warn('Live instructor status update notice:', err);

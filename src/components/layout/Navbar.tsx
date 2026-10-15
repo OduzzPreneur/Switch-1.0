@@ -98,10 +98,6 @@ export default function Navbar() {
         } catch (e) {
           setStudentSession(null);
         }
-      } else if (isDashboardRoute) {
-        // Fallback demo student ONLY when actively inside the dashboard route for testing
-        const student = getOrInitDefaultStudent();
-        setStudentSession(student);
       } else {
         setStudentSession(null);
       }

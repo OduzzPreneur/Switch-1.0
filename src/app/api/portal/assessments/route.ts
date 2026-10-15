@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase/admin';
+import { getAuthContext } from '@/lib/auth/session';
 
 export async function GET(req: NextRequest) {
   try {
@@ -32,6 +33,15 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await getAuthContext(req);
+
+    // Only instructors and administrators may create assessments
+    if (!auth || (auth.role !== 'instructor' && auth.role !== 'admin')) {
+      return NextResponse.json(
+        { success: false, message: 'Only instructors and administrators can publish course assessments.' },
+        { status: 403 }
+      );
+    }
     const body = await req.json();
     const { trackId, weekNumber, title, type, description, maxScore, dueDate, instructorId } = body;
 

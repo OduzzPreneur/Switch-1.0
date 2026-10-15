@@ -426,38 +426,27 @@ export function getStudentAssessmentStats(regNo: string, trackId: string): {
   };
 }
 
-// DEFAULT STUDENT SESSION (Initializes if localStorage is empty)
-export function getOrInitDefaultStudent(): any {
+// STUDENT SESSION RETRIEVAL (Returns null if not logged in)
+export function getStoredStudentSession(): any {
   if (typeof window === 'undefined') return null;
   const stored = localStorage.getItem('switch_student_session');
   if (stored) {
     try {
       return JSON.parse(stored);
     } catch (e) {
-      // fallback
+      return null;
     }
   }
-
-  // Pre-seed default student if none exists
-  const defaultStudent = {
-    fullName: 'Odubona Tobi Isaac',
-    email: 'odubonatobi@gmail.com',
-    phone: '+234 814 567 8901',
-    ageBracket: '21-25',
-    gender: 'Male',
-    stateOfResidence: 'Lagos',
-    trackId: 'solar-energy',
-    learningMode: 'Physical Center / Hybrid',
-    registrationNumber: 'SW1-2026-74651',
-    paymentReference: 'PSTK-REF-74651-SWITCH',
-    amountPaid: 5000,
-    paymentStatus: 'verified',
-    cohort: 'Cohort 1.0',
-    verifiedAt: '2026-10-10T12:00:00Z',
-    bio: 'Renewable energy enthusiast passionate about solar micro-inverter installation, rural electrification, and clean power solutions.',
-    emergencyContact: '+234 802 334 5566 (Brother - Samuel Odubona)',
-  };
-
-  localStorage.setItem('switch_student_session', JSON.stringify(defaultStudent));
-  return defaultStudent;
+  return null;
 }
+
+// Retained for backwards compatibility but strictly returns null if no authenticated session exists
+export function getOrInitDefaultStudent(): any {
+  return getStoredStudentSession();
+}
+
+export function clearStudentSession(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem('switch_student_session');
+}
+

@@ -110,26 +110,40 @@ function InstructorPortalContent() {
       syncFetchSubmissions().then((subs) => setSubmissions(subs));
 
       const defaultStd = getOrInitDefaultStudent();
-      if (defaultStd) {
-        setStudentRoster([
-          defaultStd,
-          {
-            fullName: 'Adekoya Michael',
-            registrationNumber: 'SW1-2026-88192',
-            trackId: currentInstructor.trackId,
-            learningMode: 'Physical Center / Hybrid',
-          },
-        ]);
+      const roster = defaultStd
+        ? [
+            defaultStd,
+            {
+              fullName: 'Adekoya Michael',
+              registrationNumber: 'SW1-2026-88192',
+              trackId: currentInstructor.trackId,
+              learningMode: 'Physical Center / Hybrid',
+            },
+          ]
+        : [
+            {
+              fullName: 'Adekoya Michael',
+              registrationNumber: 'SW1-2026-88192',
+              trackId: currentInstructor.trackId,
+              learningMode: 'Physical Center / Hybrid',
+            },
+          ];
 
-        setAttendanceStatuses({
-          [defaultStd.registrationNumber]: 'present',
-          'SW1-2026-88192': 'present',
-        });
-      }
+      setStudentRoster(roster);
+      const initialStatuses: { [regNo: string]: 'present' | 'late' | 'absent' } = {};
+      roster.forEach((s) => {
+        initialStatuses[s.registrationNumber] = 'present';
+      });
+      setAttendanceStatuses(initialStatuses);
     }
   }, [checkingAuth, currentInstructor]);
 
-  const handleInstructorLogout = () => {
+  const handleInstructorLogout = async () => {
+    try {
+      await fetch('/api/instructor/auth', { method: 'DELETE' });
+    } catch (e) {
+      // fallback
+    }
     if (typeof window !== 'undefined') {
       localStorage.removeItem('switch_instructor_session');
     }

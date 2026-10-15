@@ -140,43 +140,48 @@ function DashboardContent() {
         }
       }
 
-      // 2. Check localStorage session fallback or initialize default
+      // 2. Check localStorage session fallback
       if (!currentStudent && typeof window !== 'undefined') {
         currentStudent = getOrInitDefaultStudent();
       }
 
-      if (isMounted && currentStudent) {
-        setStudent(currentStudent);
+      if (isMounted) {
+        if (currentStudent) {
+          setStudent(currentStudent);
 
-        // Load dynamic metrics immediately from cache
-        const att = getStudentAttendanceStats(currentStudent.registrationNumber);
-        setAttendanceStats(att);
+          // Load dynamic metrics immediately from cache
+          const att = getStudentAttendanceStats(currentStudent.registrationNumber);
+          setAttendanceStats(att);
 
-        const asm = getStudentAssessmentStats(
-          currentStudent.registrationNumber,
-          currentStudent.trackId
-        );
-        setAssessmentStats(asm);
+          const asm = getStudentAssessmentStats(
+            currentStudent.registrationNumber,
+            currentStudent.trackId
+          );
+          setAssessmentStats(asm);
 
-        setLoading(false);
+          setLoading(false);
 
-        // Fetch live database updates from Supabase
-        const regNo = currentStudent.registrationNumber;
-        const trackId = currentStudent.trackId;
-        Promise.all([
-          syncFetchAttendance(trackId, regNo),
-          syncFetchAssessments(trackId),
-          syncFetchSubmissions(regNo),
-        ]).then(() => {
-          if (isMounted) {
-            const freshAtt = getStudentAttendanceStats(regNo);
-            setAttendanceStats(freshAtt);
-            const freshAsm = getStudentAssessmentStats(regNo, trackId);
-            setAssessmentStats(freshAsm);
-          }
-        }).catch((syncErr) => {
-          console.warn('Dashboard live sync note:', syncErr);
-        });
+          // Fetch live database updates from Supabase
+          const regNo = currentStudent.registrationNumber;
+          const trackId = currentStudent.trackId;
+          Promise.all([
+            syncFetchAttendance(trackId, regNo),
+            syncFetchAssessments(trackId),
+            syncFetchSubmissions(regNo),
+          ]).then(() => {
+            if (isMounted) {
+              const freshAtt = getStudentAttendanceStats(regNo);
+              setAttendanceStats(freshAtt);
+              const freshAsm = getStudentAssessmentStats(regNo, trackId);
+              setAssessmentStats(freshAsm);
+            }
+          }).catch((syncErr) => {
+            console.warn('Dashboard live sync note:', syncErr);
+          });
+        } else {
+          // Redirect unauthenticated visitor to login
+          router.replace('/login');
+        }
       }
     }
 
@@ -185,11 +190,12 @@ function DashboardContent() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [router]);
 
   const handleLogout = async () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('switch_student_session');
+      document.cookie = 'switch_student_token=; Max-Age=0; path=/; SameSite=Lax';
     }
     if (isSupabaseConfigured && supabase) {
       await supabase.auth.signOut();

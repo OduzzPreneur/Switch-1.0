@@ -20,33 +20,11 @@ export default function InstructorLoginPage() {
     setLoading(true);
 
     try {
-      // 1. Check local storage for any admin-registered instructor
-      if (typeof window !== 'undefined') {
-        const stored = localStorage.getItem('switch_portal_instructors');
-        if (stored) {
-          try {
-            const list = JSON.parse(stored);
-            const found = list.find(
-              (i: any) => i.email.toLowerCase() === email.trim().toLowerCase()
-            );
-            if (found) {
-              if (found.status === 'pending') {
-                throw new Error('Your instructor account is pending administrator review. Teaching tools will unlock once approved.');
-              }
-              if (found.status === 'suspended') {
-                throw new Error('Your instructor access has been suspended by administration.');
-              }
-              localStorage.setItem('switch_instructor_session', JSON.stringify(found));
-              router.push('/instructor');
-              return;
-            }
-          } catch (e) {
-            // fallback
-          }
-        }
+      if (!email.trim() || !password) {
+        throw new Error('Please enter both faculty email and passcode.');
       }
 
-      // 2. Query instructor auth endpoint
+      // Query instructor auth endpoint (verifies password and issues HTTP-only session cookie)
       const res = await fetch('/api/instructor/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -60,7 +38,13 @@ export default function InstructorLoginPage() {
       }
 
       if (typeof window !== 'undefined') {
-        localStorage.setItem('switch_instructor_session', JSON.stringify(data.instructor));
+        localStorage.setItem(
+          'switch_instructor_session',
+          JSON.stringify({
+            authenticated: true,
+            instructor: data.instructor,
+          })
+        );
       }
 
       router.push('/instructor');
@@ -68,12 +52,6 @@ export default function InstructorLoginPage() {
       setErrorMsg(err.message || 'Unable to sign in. Please verify your credentials.');
       setLoading(false);
     }
-  };
-
-  const handleQuickFill = (testEmail: string) => {
-    setEmail(testEmail);
-    setPassword('switch123');
-    setErrorMsg(null);
   };
 
   return (
@@ -163,36 +141,7 @@ export default function InstructorLoginPage() {
           </button>
         </form>
 
-        {/* Quick Testing helper pills */}
-        <div className="mt-5 pt-4 border-t border-white/10">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2 text-center">
-            Quick Testing Accounts (Method A Vetted)
-          </span>
-          <div className="flex flex-wrap gap-1.5 justify-center">
-            <button
-              type="button"
-              onClick={() => handleQuickFill('babatunde.alabi@switch.ng')}
-              className="text-[10px] bg-white/5 hover:bg-white/10 text-amber-300 px-2 py-1 rounded-lg border border-white/10 transition-colors"
-            >
-              Solar Energy Lead
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickFill('chioma.okonkwo@switch.ng')}
-              className="text-[10px] bg-white/5 hover:bg-white/10 text-emerald-300 px-2 py-1 rounded-lg border border-white/10 transition-colors"
-            >
-              Software Eng. Lead
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickFill('oluwaseun.adeleke@switch.ng')}
-              className="text-[10px] bg-white/5 hover:bg-white/10 text-rose-300 px-2 py-1 rounded-lg border border-white/10 transition-colors"
-              title="Test pending approval gate"
-            >
-              UI/UX (Pending)
-            </button>
-          </div>
-        </div>
+
 
         <div className="mt-6 pt-4 border-t border-white/10 text-center text-xs text-slate-400">
           Not an instructor?{' '}

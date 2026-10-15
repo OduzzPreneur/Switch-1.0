@@ -1,11 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase/admin';
+import { getAuthContext } from '@/lib/auth/session';
 
 export async function GET(req: NextRequest) {
   try {
+    const auth = await getAuthContext(req);
+
+    if (!auth) {
+      return NextResponse.json(
+        { success: false, message: 'Authentication required to view attendance records.' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
-    const trackId = searchParams.get('trackId');
-    const regNo = searchParams.get('regNo');
+    let trackId = searchParams.get('trackId');
+    let regNo = searchParams.get('regNo');
+
+    // Students may only view their own attendance
+    if (auth.role === 'student') {
+      const studentReg = auth.session.registrationNumber || regNo;
+      if (!studentReg) {
+        return NextResponse.json(
+          { success: false, message: 'Student registration identity missing.' },
+          { status: 400 }
+        );
+      }
+      regNo = studentReg;
+    }
 
     if (isSupabaseAdminConfigured && supabaseAdmin) {
       let query = supabaseAdmin.from('attendance').select('*');
@@ -28,6 +50,7 @@ export async function GET(req: NextRequest) {
       success: true,
       fallback: true,
       message: 'Using local attendance cache.',
+      records: [],
     });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
@@ -36,8 +59,18 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await getAuthContext(req);
+
+    // Only instructors and administrators can mark attendance
+    if (!auth || (auth.role !== 'instructor' && auth.role !== 'admin')) {
+      return NextResponse.json(
+        { success: false, message: 'Only authorized course instructors and administrators can record attendance.' },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
-    const { trackId, sessionDate, sessionWeek, sessionTitle, instructorId, entries } = body;
+    const { trackId, sessionDate, sessionWeek, sessionTitle, entries } = body;
 
     if (!trackId || !sessionDate || !entries || !Array.isArray(entries)) {
       return NextResponse.json(
@@ -53,6 +86,7 @@ export async function POST(req: NextRequest) {
       session_title: sessionTitle || `Week ${sessionWeek} Session`,
       student_reg_no: e.studentRegNo,
       status: e.status || 'present',
+      marked_by: auth.session.userId,
       marked_at: new Date().toISOString(),
     }));
 

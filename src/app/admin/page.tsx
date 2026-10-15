@@ -62,27 +62,29 @@ export default function AdminPage() {
 
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
-  // Check Admin Session Guard
+  // Check Admin Session Guard via Server Endpoint + local metadata
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const sessionStr = localStorage.getItem('switch_admin_session');
-      if (!sessionStr) {
-        router.replace('/admin/login');
-        return;
-      }
+    let isMounted = true;
+    async function checkAuth() {
       try {
-        const parsed = JSON.parse(sessionStr);
-        if (!parsed.authenticated) {
+        const res = await fetch('/api/admin/auth');
+        const data = await res.json();
+        if (!res.ok || !data.success) {
           router.replace('/admin/login');
           return;
         }
-        setAdminEmail(parsed.email || 'admin@switch.ng');
+        if (isMounted) {
+          setAdminEmail(data.admin?.email || 'admin@switch.ng');
+          setCheckingAuth(false);
+        }
       } catch {
         router.replace('/admin/login');
-        return;
       }
-      setCheckingAuth(false);
     }
+    checkAuth();
+    return () => {
+      isMounted = false;
+    };
   }, [router]);
 
   // Load Instructors with Supabase sync + local fallback
@@ -94,7 +96,12 @@ export default function AdminPage() {
     }
   }, [checkingAuth]);
 
-  const handleAdminLogout = () => {
+  const handleAdminLogout = async () => {
+    try {
+      await fetch('/api/admin/auth', { method: 'DELETE' });
+    } catch (e) {
+      // fallback
+    }
     if (typeof window !== 'undefined') {
       localStorage.removeItem('switch_admin_session');
     }
@@ -464,37 +471,43 @@ export default function AdminPage() {
           {/* ========================================================================= */}
           {activeTab === 'students' && (
             <div className="space-y-4">
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-switch-teal text-white flex items-center justify-center font-black text-xl">
-                    {student?.fullName ? student.fullName.charAt(0) : 'S'}
+              {student ? (
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-switch-teal text-white flex items-center justify-center font-black text-xl">
+                      {student?.fullName ? student.fullName.charAt(0) : 'S'}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-bold text-slate-900">{student?.fullName}</h4>
+                        <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                          Verified Paid (₦5,000)
+                        </span>
+                      </div>
+                      <div className="text-slate-500 mt-0.5">
+                        Reg ID: <strong className="font-mono text-switch-teal">{student?.registrationNumber}</strong> · {student?.email}
+                      </div>
+                      <div className="text-slate-600 mt-0.5">
+                        Track: <strong>{TRACKS.find((t) => t.id === student?.trackId)?.title}</strong> ({student?.learningMode})
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-bold text-slate-900">{student?.fullName}</h4>
-                      <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                        Verified Paid (₦5,000)
-                      </span>
-                    </div>
-                    <div className="text-slate-500 mt-0.5">
-                      Reg ID: <strong className="font-mono text-switch-teal">{student?.registrationNumber}</strong> · {student?.email}
-                    </div>
-                    <div className="text-slate-600 mt-0.5">
-                      Track: <strong>{TRACKS.find((t) => t.id === student?.trackId)?.title}</strong> ({student?.learningMode})
-                    </div>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-2">
-                  <Link
-                    href="/dashboard"
-                    className="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl bg-switch-teal hover:bg-switch-teal-700 text-white font-bold transition-colors"
-                  >
-                    <span>View Student Portal</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href="/dashboard"
+                      className="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl bg-switch-teal hover:bg-switch-teal-700 text-white font-bold transition-colors"
+                    >
+                      <span>View Student Portal</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-500 text-xs">
+                  No active student session in local cache. Registered student records are persisted securely in the Supabase database.
+                </div>
+              )}
             </div>
           )}
 

@@ -19,6 +19,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      if (!email.trim() || !password) {
+        throw new Error('Please enter both email and password.');
+      }
+
       if (isSupabaseConfigured && supabase) {
         const { data, error } = await supabase.auth.signInWithPassword({
           email: email.trim().toLowerCase(),
@@ -29,23 +33,23 @@ export default function LoginPage() {
           throw error;
         }
 
+        if (data.user) {
+          // Set server-side HTTP-only session cookie for Edge Middleware
+          await fetch('/api/portal/student-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: data.user.id,
+              email: data.user.email,
+            }),
+          });
+        }
+
         router.push('/dashboard');
         return;
       }
 
-      // Check for locally registered student record
-      if (typeof window !== 'undefined') {
-        const stored = localStorage.getItem('switch_student_session');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (parsed.email && parsed.email.toLowerCase() === email.trim().toLowerCase()) {
-            router.push('/dashboard');
-            return;
-          }
-        }
-      }
-
-      throw new Error('Invalid email or password. Please verify your credentials or register first.');
+      throw new Error('Authentication service is offline or credentials could not be verified.');
     } catch (err: any) {
       setErrorMsg(err.message || 'Unable to sign in. Please check your credentials.');
       setLoading(false);

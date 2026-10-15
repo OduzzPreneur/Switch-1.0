@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase/admin';
+import { getAuthContext } from '@/lib/auth/session';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const auth = await getAuthContext(req);
+    const isAdmin = auth?.role === 'admin';
+
     if (isSupabaseAdminConfigured && supabaseAdmin) {
       const { data, error } = await supabaseAdmin
         .from('instructors')
@@ -10,7 +14,20 @@ export async function GET() {
         .order('created_at', { ascending: false });
 
       if (!error && data && data.length > 0) {
-        return NextResponse.json({ success: true, instructors: data });
+        // Redact phone numbers and emails for non-admin viewers to prevent faculty harvesting
+        const sanitized = data.map((inst) => {
+          if (isAdmin) return inst;
+          return {
+            id: inst.id,
+            full_name: inst.full_name,
+            track_id: inst.track_id,
+            bio: inst.bio,
+            experience_years: inst.experience_years,
+            status: inst.status,
+          };
+        });
+
+        return NextResponse.json({ success: true, instructors: sanitized });
       }
     }
 
@@ -26,6 +43,16 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await getAuthContext(req);
+
+    // Strictly require administrator role to provision faculty
+    if (!auth || auth.role !== 'admin') {
+      return NextResponse.json(
+        { success: false, message: 'Administrative authentication required to provision faculty.' },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const { fullName, email, phone, trackId, bio, experienceYears, status, password } = body;
 
@@ -67,7 +94,7 @@ export async function POST(req: NextRequest) {
       instructor: {
         id: `inst-${Date.now()}`,
         ...newInstructor,
-        password: password || 'switch123',
+        password: password || 'Switch2026!',
       },
     });
   } catch (error: any) {
@@ -77,10 +104,22 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { id, status } = await req.json();
+    const auth = await getAuthContext(req);
+
+    // Strictly require administrator role to update instructor approval or status
+    if (!auth || auth.role !== 'admin') {
+      return NextResponse.json(
+        { success: false, message: 'Administrative authentication required to update instructor status.' },
+        { status: 403 }
+      );
+    }
+
+    const body = await req.json();
+    const id = body.id || body.instructorId;
+    const status = body.status;
 
     if (!id || !status) {
-      return NextResponse.json({ success: false, message: 'ID and status required.' }, { status: 400 });
+      return NextResponse.json({ success: false, message: 'Instructor ID and status are required.' }, { status: 400 });
     }
 
     if (isSupabaseAdminConfigured && supabaseAdmin) {

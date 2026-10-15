@@ -48,9 +48,8 @@ export async function POST(req: NextRequest) {
           return NextResponse.json(
             {
               success: false,
-              message: `A student with email "${email}" is already registered (ID: ${existingReg.registration_number}). You cannot register twice. Please sign in to your student portal.`,
+              message: `A student with email "${email}" is already registered. Please sign in to your student portal.`,
               isAlreadyRegistered: true,
-              registrationNumber: existingReg.registration_number,
             },
             { status: 409 }
           );
