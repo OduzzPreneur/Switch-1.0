@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyPaystackPayment } from '@/lib/paystack';
 import { generateRegistrationNumber, TOKEN_AMOUNT_KOBO } from '@/lib/security';
 import { supabaseAdmin, isSupabaseAdminConfigured } from '@/lib/supabase/admin';
+import { COOKIE_STUDENT_TOKEN, signSession } from '@/lib/auth/session';
 
 export async function POST(req: NextRequest) {
   try {
@@ -43,8 +44,11 @@ export async function POST(req: NextRequest) {
       email: studentData?.email || meta.email || verification.data.customer?.email,
       phone: studentData?.phone || meta.phone || '',
       ageBracket: studentData?.ageBracket || meta.ageBracket || '21-25',
+      gender: studentData?.gender || meta.gender || 'Prefer not to say',
+      stateOfResidence: studentData?.stateOfResidence || meta.stateOfResidence || 'Lagos',
       trackId: studentData?.trackId || meta.trackId || 'software-engineering',
       learningMode: studentData?.learningMode || meta.learningMode || 'Online / Virtual',
+      highestEducation: studentData?.highestEducation || meta.highestEducation || '',
       registrationNumber,
       paymentReference: reference,
       amountPaid: 5000,
@@ -53,10 +57,10 @@ export async function POST(req: NextRequest) {
     };
 
     // Persist to Supabase cloud database if configured
+    let userId: string | null = null;
     if (isSupabaseAdminConfigured && supabaseAdmin) {
       try {
         const studentEmail = registrationRecord.email.toLowerCase().trim();
-        let userId: string | null = null;
 
         // 1. Check or create Auth User
         const { data: usersList } = await supabaseAdmin.auth.admin.listUsers();
@@ -64,6 +68,11 @@ export async function POST(req: NextRequest) {
 
         if (existingAuthUser) {
           userId = existingAuthUser.id;
+          if (studentData?.password) {
+            await supabaseAdmin.auth.admin.updateUserById(userId, {
+              password: studentData.password,
+            });
+          }
         } else {
           const { data: newAuthUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
             email: studentEmail,
@@ -87,8 +96,9 @@ export async function POST(req: NextRequest) {
             email: studentEmail,
             phone: registrationRecord.phone,
             age_bracket: registrationRecord.ageBracket,
-            gender: studentData?.gender || 'Prefer not to say',
-            state_of_residence: studentData?.stateOfResidence || 'Lagos',
+            gender: registrationRecord.gender,
+            state_of_residence: registrationRecord.stateOfResidence,
+            highest_education: registrationRecord.highestEducation,
             updated_at: new Date().toISOString(),
           });
 
@@ -123,11 +133,34 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({
+    const finalRegistration = {
+      ...registrationRecord,
+      id: userId || undefined,
+    };
+
+    // Sign a secure student session token so edge middleware and client are instantly logged in
+    const token = await signSession({
+      role: 'student',
+      userId: userId || registrationRecord.email,
+      email: registrationRecord.email,
+      registrationNumber,
+    });
+
+    const response = NextResponse.json({
       success: true,
       message: 'Payment verified and student enrollment confirmed.',
-      registration: registrationRecord,
+      registration: finalRegistration,
     });
+
+    response.cookies.set(COOKIE_STUDENT_TOKEN, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+    });
+
+    return response;
   } catch (error: any) {
     console.error('Error verifying payment:', error);
     return NextResponse.json(

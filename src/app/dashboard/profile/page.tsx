@@ -69,54 +69,81 @@ export default function StudentProfilePage() {
     let isMounted = true;
 
     async function loadStudentData() {
-      // 1. Try Supabase session first
+      // 1. Get student session stored locally (from fresh registration or active session)
+      let localStudent: any = null;
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('switch_student_session');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (parsed?.paymentReference === 'PSTK-REF-74651-SWITCH') {
+              localStorage.removeItem('switch_student_session');
+            } else if (parsed?.registrationNumber) {
+              localStudent = parsed;
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+
+      // 2. Try Supabase session if configured
       if (isSupabaseConfigured && supabase) {
         try {
           const { data: { user } } = await supabase.auth.getUser();
           if (user && isMounted) {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', user.id)
-              .maybeSingle();
+            if (localStudent && user.email?.toLowerCase() !== localStudent.email?.toLowerCase()) {
+              await supabase.auth.signOut();
+            } else {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .maybeSingle();
 
-            const { data: reg } = await supabase
-              .from('registrations')
-              .select('*')
-              .eq('user_id', user.id)
-              .maybeSingle();
+              const { data: regList } = await supabase
+                .from('registrations')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
 
-            if (profile && reg) {
-              const studentObj = {
-                id: user.id,
-                fullName: profile.full_name,
-                email: profile.email,
-                phone: profile.phone,
-                ageBracket: profile.age_bracket,
-                gender: profile.gender,
-                stateOfResidence: profile.state_of_residence,
-                trackId: reg.track_id,
-                learningMode: reg.learning_mode,
-                registrationNumber: reg.registration_number,
-                paymentReference: 'Verified Cloud Account',
-                amountPaid: 5000,
-                paymentStatus: 'verified',
-                cohort: 'Cohort 1.0',
-                emergencyContact: (profile as any)?.emergency_contact || '',
-                bio: (profile as any)?.bio || '',
-              };
-              setStudent(studentObj);
-              setFormData({
-                fullName: studentObj.fullName || '',
-                phone: studentObj.phone || '',
-                stateOfResidence: studentObj.stateOfResidence || 'Lagos',
-                gender: studentObj.gender || 'Male',
-                ageBracket: studentObj.ageBracket || '21-25',
-                emergencyContact: studentObj.emergencyContact || '',
-                bio: studentObj.bio || '',
-              });
-              setLoading(false);
-              return;
+              const reg = regList && regList.length > 0 ? regList[0] : null;
+
+              if (profile && reg) {
+                const studentObj = {
+                  id: user.id,
+                  fullName: profile.full_name || localStudent?.fullName,
+                  email: profile.email || user.email,
+                  phone: profile.phone || localStudent?.phone,
+                  ageBracket: profile.age_bracket || localStudent?.ageBracket,
+                  gender: profile.gender || localStudent?.gender,
+                  stateOfResidence: profile.state_of_residence || localStudent?.stateOfResidence,
+                  trackId: reg.track_id || localStudent?.trackId,
+                  learningMode: reg.learning_mode || localStudent?.learningMode,
+                  registrationNumber: reg.registration_number || localStudent?.registrationNumber,
+                  paymentReference: localStudent?.paymentReference || 'Verified Cloud Account',
+                  amountPaid: localStudent?.amountPaid || 5000,
+                  paymentStatus: 'verified',
+                  cohort: 'Cohort 1.0',
+                  emergencyContact: (profile as any)?.emergency_contact || localStudent?.emergencyContact || '',
+                  bio: (profile as any)?.bio || localStudent?.bio || '',
+                };
+                setStudent(studentObj);
+                setFormData({
+                  fullName: studentObj.fullName || '',
+                  phone: studentObj.phone || '',
+                  stateOfResidence: studentObj.stateOfResidence || 'Lagos',
+                  gender: studentObj.gender || 'Male',
+                  ageBracket: studentObj.ageBracket || '21-25',
+                  emergencyContact: studentObj.emergencyContact || '',
+                  bio: studentObj.bio || '',
+                });
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('switch_student_session', JSON.stringify(studentObj));
+                }
+                setLoading(false);
+                return;
+              }
             }
           }
         } catch (e) {
@@ -124,24 +151,24 @@ export default function StudentProfilePage() {
         }
       }
 
-      // 2. Fallback to localStorage session
-      if (typeof window !== 'undefined' && isMounted) {
-        const studentObj = getOrInitDefaultStudent();
-        if (studentObj) {
-          setStudent(studentObj);
-          setFormData({
-            fullName: studentObj.fullName || '',
-            phone: studentObj.phone || '',
-            stateOfResidence: studentObj.stateOfResidence || 'Lagos',
-            gender: studentObj.gender || 'Male',
-            ageBracket: studentObj.ageBracket || '21-25',
-            emergencyContact: studentObj.emergencyContact || '',
-            bio: studentObj.bio || '',
-          });
-          setLoading(false);
-        } else {
-          router.replace('/login');
-        }
+      // 3. Fallback to localStorage session
+      if (localStudent && isMounted) {
+        setStudent(localStudent);
+        setFormData({
+          fullName: localStudent.fullName || '',
+          phone: localStudent.phone || '',
+          stateOfResidence: localStudent.stateOfResidence || 'Lagos',
+          gender: localStudent.gender || 'Male',
+          ageBracket: localStudent.ageBracket || '21-25',
+          emergencyContact: localStudent.emergencyContact || '',
+          bio: localStudent.bio || '',
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (isMounted) {
+        router.replace('/login');
       }
     }
 

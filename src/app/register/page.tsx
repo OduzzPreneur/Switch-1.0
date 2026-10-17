@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { TRACKS } from '@/data/tracks';
 import { TOKEN_AMOUNT_NGN } from '@/lib/security';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import {
   ShieldCheck,
   CheckCircle2,
@@ -58,7 +59,9 @@ function RegisterForm() {
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          if (parsed?.registrationNumber) {
+          if (parsed?.paymentReference === 'PSTK-REF-74651-SWITCH') {
+            localStorage.removeItem('switch_student_session');
+          } else if (parsed?.registrationNumber) {
             setExistingStudent(parsed);
           }
         } catch (e) {
@@ -142,6 +145,7 @@ function RegisterForm() {
         // Save current form state to recover after redirect
         if (typeof window !== 'undefined') {
           sessionStorage.setItem('switch_pending_registration', JSON.stringify(formData));
+          localStorage.setItem('switch_pending_registration', JSON.stringify(formData));
         }
         // Redirect to Paystack secure checkout
         window.location.href = data.data.authorization_url;
@@ -159,7 +163,9 @@ function RegisterForm() {
     try {
       let pendingData = formData;
       if (typeof window !== 'undefined') {
-        const storedPending = sessionStorage.getItem('switch_pending_registration');
+        const storedPending =
+          sessionStorage.getItem('switch_pending_registration') ||
+          localStorage.getItem('switch_pending_registration');
         if (storedPending) {
           try {
             pendingData = JSON.parse(storedPending);
@@ -184,15 +190,52 @@ function RegisterForm() {
         throw new Error(verifyData.message || 'Payment verification could not be finalized.');
       }
 
+      const registeredStudent = verifyData.registration;
+
       if (typeof window !== 'undefined') {
         localStorage.setItem(
           'switch_student_session',
-          JSON.stringify(verifyData.registration)
+          JSON.stringify(registeredStudent)
         );
         sessionStorage.removeItem('switch_pending_registration');
+        localStorage.removeItem('switch_pending_registration');
       }
 
-      setRegistrationSuccess(verifyData.registration);
+      // Explicitly sync session cookie for middleware
+      try {
+        await fetch('/api/portal/student-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: registeredStudent.id || registeredStudent.email,
+            email: registeredStudent.email,
+            registrationNumber: registeredStudent.registrationNumber,
+          }),
+        });
+      } catch (sessErr) {
+        console.warn('Session sync note:', sessErr);
+      }
+
+      // If Supabase is configured, sign out any previous user and sign in as new student
+      if (isSupabaseConfigured && supabase) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user && session.user.email?.toLowerCase() !== registeredStudent.email?.toLowerCase()) {
+            await supabase.auth.signOut();
+          }
+
+          if (pendingData?.password) {
+            await supabase.auth.signInWithPassword({
+              email: registeredStudent.email.toLowerCase().trim(),
+              password: pendingData.password,
+            });
+          }
+        } catch (authErr) {
+          console.warn('Supabase auto-login note:', authErr);
+        }
+      }
+
+      setRegistrationSuccess(registeredStudent);
       setIsSubmitting(false);
     } catch (err: any) {
       setErrorMsg(err.message || 'Verification failed. Please contact support.');
@@ -248,6 +291,11 @@ function RegisterForm() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/dashboard"
+              onClick={() => {
+                if (registrationSuccess && typeof window !== 'undefined') {
+                  localStorage.setItem('switch_student_session', JSON.stringify(registrationSuccess));
+                }
+              }}
               className="inline-flex items-center justify-center gap-2 bg-switch-teal hover:bg-switch-teal-700 text-white font-bold px-6 py-3.5 rounded-xl text-sm transition-all shadow-md"
             >
               <span>Access Student Portal</span>
@@ -325,7 +373,15 @@ function RegisterForm() {
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
             <button
-              onClick={() => setExistingStudent(null)}
+              onClick={async () => {
+                setExistingStudent(null);
+                if (typeof window !== 'undefined') {
+                  localStorage.removeItem('switch_student_session');
+                }
+                if (isSupabaseConfigured && supabase) {
+                  await supabase.auth.signOut();
+                }
+              }}
               className="text-xs text-slate-500 hover:text-slate-800 underline px-2 py-1"
             >
               Register Someone Else

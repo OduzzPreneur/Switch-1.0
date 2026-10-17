@@ -88,8 +88,8 @@ export default function Navbar() {
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          // If stored is the auto-seeded mock student and we are on a public route, purge it so it doesn't pollute the general landing page
-          if (parsed?.paymentReference === 'PSTK-REF-74651-SWITCH' && !isDashboardRoute) {
+          // If stored is the auto-seeded mock student, purge it completely
+          if (parsed?.paymentReference === 'PSTK-REF-74651-SWITCH') {
             localStorage.removeItem('switch_student_session');
             setStudentSession(null);
           } else {
@@ -106,21 +106,31 @@ export default function Navbar() {
     if (isSupabaseConfigured && supabase) {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session?.user) {
-          setStudentSession((prev: any) => ({
-            ...prev,
-            email: session.user.email,
-            fullName: session.user.user_metadata?.full_name || prev?.fullName,
-          }));
+          setStudentSession((prev: any) => {
+            if (!prev || prev.email?.toLowerCase() === session.user.email?.toLowerCase()) {
+              return {
+                ...prev,
+                email: session.user.email,
+                fullName: session.user.user_metadata?.full_name || prev?.fullName,
+              };
+            }
+            return prev;
+          });
         }
       });
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
         if (session?.user) {
-          setStudentSession((prev: any) => ({
-            ...prev,
-            email: session.user.email,
-            fullName: session.user.user_metadata?.full_name || prev?.fullName,
-          }));
+          setStudentSession((prev: any) => {
+            if (!prev || prev.email?.toLowerCase() === session.user.email?.toLowerCase()) {
+              return {
+                ...prev,
+                email: session.user.email,
+                fullName: session.user.user_metadata?.full_name || prev?.fullName,
+              };
+            }
+            return prev;
+          });
         } else if (!isDashboardRoute) {
           setStudentSession(null);
         }
@@ -162,7 +172,7 @@ export default function Navbar() {
 
   const studentName = studentSession?.fullName || 'Student Fellow';
   const studentInitial = studentName.charAt(0).toUpperCase();
-  const regNo = studentSession?.registrationNumber || 'SW1-2026-74651';
+  const regNo = studentSession?.registrationNumber || '';
 
   // 1. STUDENT DASHBOARD NAVIGATION ITEMS (Exactly requested by user)
   const studentNavItems = [

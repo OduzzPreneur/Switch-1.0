@@ -71,6 +71,10 @@ export async function POST(req: NextRequest) {
         phone,
         trackId,
         ageBracket,
+        gender: body.gender || 'Prefer not to say',
+        stateOfResidence: body.stateOfResidence || 'Lagos',
+        learningMode: body.learningMode || 'Online / Virtual',
+        highestEducation: body.highestEducation || '',
         purpose: 'Switch 1.0 Youth Empowerment Token',
       },
     });

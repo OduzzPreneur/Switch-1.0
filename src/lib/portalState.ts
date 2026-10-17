@@ -432,7 +432,12 @@ export function getStoredStudentSession(): any {
   const stored = localStorage.getItem('switch_student_session');
   if (stored) {
     try {
-      return JSON.parse(stored);
+      const parsed = JSON.parse(stored);
+      if (parsed?.paymentReference === 'PSTK-REF-74651-SWITCH') {
+        localStorage.removeItem('switch_student_session');
+        return null;
+      }
+      return parsed;
     } catch (e) {
       return null;
     }

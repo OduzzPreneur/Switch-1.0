@@ -101,38 +101,67 @@ function DashboardContent() {
     async function loadData() {
       let currentStudent = null;
 
-      // 1. Try Supabase Auth session if configured
+      // 1. Get student session stored locally (from fresh registration or active session)
+      let localStudent: any = null;
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('switch_student_session');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (parsed?.paymentReference === 'PSTK-REF-74651-SWITCH') {
+              localStorage.removeItem('switch_student_session');
+            } else if (parsed?.registrationNumber) {
+              localStudent = parsed;
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+
+      // 2. Try Supabase Auth session if configured
       if (isSupabaseConfigured && supabase) {
         try {
           const { data: { user } } = await supabase.auth.getUser();
           if (user && isMounted) {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', user.id)
-              .maybeSingle();
+            // If Supabase user email doesn't match the newly registered student, sign out the stale user
+            if (localStudent && user.email?.toLowerCase() !== localStudent.email?.toLowerCase()) {
+              await supabase.auth.signOut();
+            } else {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .maybeSingle();
 
-            const { data: reg } = await supabase
-              .from('registrations')
-              .select('*')
-              .eq('user_id', user.id)
-              .maybeSingle();
+              const { data: regList } = await supabase
+                .from('registrations')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
 
-            if (profile && reg) {
-              currentStudent = {
-                fullName: profile.full_name,
-                email: profile.email,
-                phone: profile.phone,
-                ageBracket: profile.age_bracket,
-                gender: profile.gender,
-                stateOfResidence: profile.state_of_residence,
-                trackId: reg.track_id,
-                learningMode: reg.learning_mode,
-                registrationNumber: reg.registration_number,
-                paymentReference: 'Verified Cloud Account',
-                amountPaid: 5000,
-                paymentStatus: 'verified',
-              };
+              const reg = regList && regList.length > 0 ? regList[0] : null;
+
+              if (profile && reg) {
+                currentStudent = {
+                  id: user.id,
+                  fullName: profile.full_name || localStudent?.fullName,
+                  email: profile.email || user.email,
+                  phone: profile.phone || localStudent?.phone,
+                  ageBracket: profile.age_bracket || localStudent?.ageBracket,
+                  gender: profile.gender || localStudent?.gender || 'Male',
+                  stateOfResidence: profile.state_of_residence || localStudent?.stateOfResidence || 'Lagos',
+                  trackId: reg.track_id || localStudent?.trackId,
+                  learningMode: reg.learning_mode || localStudent?.learningMode,
+                  registrationNumber: reg.registration_number || localStudent?.registrationNumber,
+                  paymentReference: localStudent?.paymentReference || 'Verified Cloud Account',
+                  amountPaid: localStudent?.amountPaid || 5000,
+                  paymentStatus: 'verified',
+                };
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('switch_student_session', JSON.stringify(currentStudent));
+                }
+              }
             }
           }
         } catch (supabaseErr) {
@@ -140,9 +169,9 @@ function DashboardContent() {
         }
       }
 
-      // 2. Check localStorage session fallback
-      if (!currentStudent && typeof window !== 'undefined') {
-        currentStudent = getOrInitDefaultStudent();
+      // 3. Fallback to localStudent if Supabase user was not found or just registered
+      if (!currentStudent && localStudent) {
+        currentStudent = localStudent;
       }
 
       if (isMounted) {
