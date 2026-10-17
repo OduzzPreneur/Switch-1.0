@@ -1,92 +1,75 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="261 92 540 540" width="100%" height="100%" fill="none" aria-label="The Switch Logo">
   <defs>
-    <!-- Vibrant Switch Orange Gradient -->
-    <linearGradient id="switchOrangeGrad" x1="15%" y1="10%" x2="85%" y2="90%">
-      <stop offset="0%" stop-color="#FF7A29" />
-      <stop offset="50%" stop-color="#FF5E14" />
-      <stop offset="100%" stop-color="#E04200" />
+    <!-- Switch Teal Gradient -->
+    <linearGradient id="pub_switchTealGrad" x1="15%" y1="10%" x2="85%" y2="90%">
+      <stop offset="0%" stop-color="#00A8B5" />
+      <stop offset="25%" stop-color="#008997" />
+      <stop offset="55%" stop-color="#006573" />
+      <stop offset="85%" stop-color="#004350" />
+      <stop offset="100%" stop-color="#002D36" />
     </linearGradient>
 
-    <!-- Electric Cyan to Teal Accent Gradient -->
-    <linearGradient id="switchCyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38BDF8" />
-      <stop offset="60%" stop-color="#0EA5E9" />
-      <stop offset="100%" stop-color="#0284C7" />
+    <!-- Arrow Highlight Gradient -->
+    <linearGradient id="pub_switchArrowGrad" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#00B4C4" />
+      <stop offset="60%" stop-color="#007987" />
+      <stop offset="100%" stop-color="#004754" />
     </linearGradient>
 
-    <!-- Outer Track Gradient for Dark & Light visibility -->
-    <linearGradient id="switchTrackGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38BDF8" />
-      <stop offset="35%" stop-color="#0284C7" />
-      <stop offset="70%" stop-color="#0369A1" />
-      <stop offset="100%" stop-color="#FF5E14" />
+    <!-- Orange Core 3D Gradient -->
+    <radialGradient id="pub_switchOrangeRadGrad" cx="38%" cy="32%" r="65%" fx="32%" fy="26%">
+      <stop offset="0%" stop-color="#FFBD4A" />
+      <stop offset="22%" stop-color="#FF8E12" />
+      <stop offset="58%" stop-color="#FF5900" />
+      <stop offset="88%" stop-color="#E83500" />
+      <stop offset="100%" stop-color="#C72400" />
+    </radialGradient>
+
+    <!-- Specular Highlight Gradient -->
+    <linearGradient id="pub_switchSpecularGrad" x1="0%" y1="0%" x2="70%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.65" />
+      <stop offset="45%" stop-color="#FFFFFF" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
     </linearGradient>
 
-    <!-- Subtle Orange Glow Filter -->
-    <filter id="orangeGlow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="2" stdDeviation="3.5" flood-color="#FF5E14" flood-opacity="0.4" />
+    <!-- Orange Core Glow & Shadow -->
+    <filter id="pub_orangeCoreShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#E83500" flood-opacity="0.35" />
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000000" flood-opacity="0.2" />
     </filter>
 
-    <!-- Subtle Container Depth -->
-    <filter id="trackGlow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#0284C7" flood-opacity="0.25" />
+    <!-- Teal Loop Shadow -->
+    <filter id="pub_tealLoopGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#002D36" flood-opacity="0.3" />
     </filter>
   </defs>
 
-  <!-- Modern Dynamic Outer Switch Loop Track -->
-  <!-- Rounded stadium/pill geometry with dynamic transition arrow on the right -->
+  <!-- 1. The Orange Energy Toggle Core -->
+  <g filter="url(#pub_orangeCoreShadow)">
+    <rect
+      x="394"
+      y="194"
+      width="222"
+      height="212"
+      rx="76"
+      ry="74"
+      fill="url(#pub_switchOrangeRadGrad)"
+    />
+    <!-- 3D Specular Highlight Sheen -->
+    <ellipse
+      cx="462"
+      cy="244"
+      rx="44"
+      ry="24"
+      transform="rotate(-28 462 244)"
+      fill="url(#pub_switchSpecularGrad)"
+    />
+  </g>
+
+  <!-- 2. The Iconic Teal Switch Loop & Directional Arrow -->
   <path
-    d="M 42 16
-       C 26 16 16 26 16 44
-       L 16 76
-       C 16 94 26 104 44 104
-       L 76 104
-       C 94 104 104 94 104 76
-       L 104 46"
-    stroke="url(#switchTrackGrad)"
-    stroke-width="10"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    filter="url(#trackGlow)"
-  />
-
-  <!-- Dynamic Directional Arrowhead representing career switch & momentum -->
-  <path
-    d="M 94 56 L 104 44 L 114 56"
-    fill="none"
-    stroke="#38BDF8"
-    stroke-width="9"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
-
-  <!-- Inner Dynamic Transformation Arc -->
-  <path
-    d="M 32 80 C 44 80 62 76 74 58"
-    fill="none"
-    stroke="url(#switchCyanGrad)"
-    stroke-width="8"
-    stroke-linecap="round"
-  />
-
-  <!-- The Core "Switch" Energy Toggle / Nucleus (Vibrant Orange Core) -->
-  <rect
-    x="38"
-    y="30"
-    width="44"
-    height="36"
-    rx="18"
-    fill="url(#switchOrangeGrad)"
-    filter="url(#orangeGlow)"
-  />
-
-  <!-- Subtle Inner Light Reflection on Core -->
-  <ellipse
-    cx="54"
-    cy="40"
-    rx="12"
-    ry="6"
-    fill="#FFFFFF"
-    opacity="0.35"
+    d="M 425 104 L 590 104 C 655 104 706 148 708 208 L 708 241 L 758 244 L 702 332 L 635 244 L 658 241 L 658 208 C 656 172 626 153 585 153 L 435 153 C 390 153 357 175 357 220 L 357 495 C 357 538 388 569 430 569 L 580 569 C 625 569 652 542 652 502 L 652 402 C 620 450 560 505 500 525 C 455 538 415 538 388 505 C 420 497 490 480 550 445 C 600 410 638 355 653 302 L 704 369 L 704 510 C 704 570 660 620 598 620 L 420 620 C 355 620 304 570 304 510 L 304 208 C 304 150 355 104 420 104 Z"
+    fill="url(#pub_switchTealGrad)"
+    filter="url(#pub_tealLoopGlow)"
   />
 </svg>
