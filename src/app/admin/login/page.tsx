@@ -79,6 +79,24 @@ export default function AdminLoginPage() {
           </div>
         )}
 
+        {/* Demo Credentials Helper Pill */}
+        <div className="mb-5 p-3 rounded-2xl bg-purple-950/30 border border-purple-500/20 text-xs flex items-center justify-between gap-2">
+          <div className="text-left text-[11px] text-purple-200">
+            <span className="font-bold text-white block">Default Admin Account:</span>
+            <span className="font-mono text-purple-300">admin@switch.ng</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setEmail('admin@switch.ng');
+              setPasskey('Switch2026@AdminSecured!');
+            }}
+            className="px-2.5 py-1 rounded-lg bg-purple-600/40 hover:bg-purple-600 text-purple-100 text-[10px] font-bold transition-colors border border-purple-500/30"
+          >
+            Auto-fill
+          </button>
+        </div>
+
         <form onSubmit={handleAdminLogin} className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-300 uppercase mb-1">

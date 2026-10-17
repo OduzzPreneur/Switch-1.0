@@ -5,6 +5,15 @@ import { COOKIE_INSTRUCTOR_TOKEN, signSession, verifySession } from '@/lib/auth/
 // Seeded faculty members with required initial access passcodes
 const SEEDED_INSTRUCTORS = [
   {
+    id: 'inst-0',
+    full_name: 'Lead Faculty Instructor',
+    email: 'instructor@switch.ng',
+    track_id: 'software-engineering',
+    status: 'approved',
+    phone: '+234 800 000 1234',
+    passcode: 'Switch2026!',
+  },
+  {
     id: 'inst-1',
     full_name: 'Engr. Babatunde Alabi',
     email: 'babatunde.alabi@switch.ng',
@@ -27,7 +36,7 @@ const SEEDED_INSTRUCTORS = [
     full_name: 'Oluwaseun Adeleke',
     email: 'oluwaseun.adeleke@switch.ng',
     track_id: 'uiux-design',
-    status: 'pending',
+    status: 'approved',
     phone: '+234 805 456 7890',
     passcode: 'Switch2026!Design',
   },
@@ -36,7 +45,7 @@ const SEEDED_INSTRUCTORS = [
     full_name: 'Ibrahim Danladi',
     email: 'ibrahim.danladi@switch.ng',
     track_id: 'cybersecurity',
-    status: 'pending',
+    status: 'approved',
     phone: '+234 809 333 2211',
     passcode: 'Switch2026!Sec',
   },

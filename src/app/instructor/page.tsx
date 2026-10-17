@@ -82,25 +82,57 @@ function InstructorPortalContent() {
 
   // 1. Check Instructor Auth Session
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const sessionStr = localStorage.getItem('switch_instructor_session');
-      if (!sessionStr) {
-        router.replace('/instructor/login');
-        return;
+    let isMounted = true;
+    async function checkAuth() {
+      // 1. Try local cache first for instant load
+      if (typeof window !== 'undefined') {
+        const sessionStr = localStorage.getItem('switch_instructor_session');
+        if (sessionStr) {
+          try {
+            const parsed = JSON.parse(sessionStr);
+            if (parsed.authenticated && parsed.instructor) {
+              if (isMounted) {
+                setCurrentInstructor(parsed.instructor);
+                setCheckingAuth(false);
+              }
+            }
+          } catch {
+            // ignore
+          }
+        }
       }
+
+      // 2. Verify with server endpoint
       try {
-        const parsed = JSON.parse(sessionStr);
-        if (!parsed.authenticated || !parsed.instructor) {
-          router.replace('/instructor/login');
+        const res = await fetch('/api/instructor/auth');
+        const data = await res.json();
+        if (data.success && data.instructor) {
+          if (isMounted) {
+            setCurrentInstructor(data.instructor);
+            setCheckingAuth(false);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(
+                'switch_instructor_session',
+                JSON.stringify({ authenticated: true, instructor: data.instructor })
+              );
+            }
+          }
           return;
         }
-        setCurrentInstructor(parsed.instructor);
-        setCheckingAuth(false);
-      } catch {
+      } catch (err) {
+        console.warn('Instructor auth check notice:', err);
+      }
+
+      // 3. Fallback: If neither succeeds, redirect to login
+      if (isMounted) {
         router.replace('/instructor/login');
-        return;
       }
     }
+
+    checkAuth();
+    return () => {
+      isMounted = false;
+    };
   }, [router]);
 
   // 2. Load dynamic assessments & submissions from Supabase/cache

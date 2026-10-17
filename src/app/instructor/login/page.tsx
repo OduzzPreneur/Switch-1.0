@@ -83,6 +83,24 @@ export default function InstructorLoginPage() {
           </div>
         )}
 
+        {/* Demo Credentials Helper Pill */}
+        <div className="mb-5 p-3 rounded-2xl bg-amber-950/30 border border-amber-500/20 text-xs flex items-center justify-between gap-2">
+          <div className="text-left text-[11px] text-amber-200">
+            <span className="font-bold text-white block">Faculty Access Account:</span>
+            <span className="font-mono text-amber-300">instructor@switch.ng</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setEmail('instructor@switch.ng');
+              setPassword('Switch2026!');
+            }}
+            className="px-2.5 py-1 rounded-lg bg-amber-600/40 hover:bg-amber-600 text-amber-100 text-[10px] font-bold transition-colors border border-amber-500/30"
+          >
+            Auto-fill
+          </button>
+        </div>
+
         <form onSubmit={handleInstructorLogin} className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
