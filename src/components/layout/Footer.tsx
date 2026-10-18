@@ -3,18 +3,52 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShieldCheck, HeartHandshake, Mail, MapPin, Phone, Lock } from 'lucide-react';
 import { TRACKS } from '@/data/tracks';
 import SwitchLogo from '@/components/common/SwitchLogo';
 
 export default function Footer() {
   const pathname = usePathname();
-  const isPortalRoute =
-    pathname.startsWith('/dashboard') ||
-    pathname.startsWith('/instructor') ||
-    pathname.startsWith('/admin');
 
-  if (isPortalRoute) {
+  // 1. Independent Admin Console Footer (One line)
+  if (pathname.startsWith('/admin')) {
+    return (
+      <footer className="bg-[#05161c] text-slate-400 border-t border-white/10 py-3.5 px-4 text-xs mt-auto">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2 text-white font-semibold">
+            <SwitchLogo className="w-5 h-5" />
+            <span className="text-xs">Switch 1.0 Administration Console</span>
+          </div>
+          <div className="flex items-center gap-3 text-slate-400 text-[11px]">
+            <span>© {new Date().getFullYear()} Switch 1.0 Initiative. All rights reserved.</span>
+            <span>·</span>
+            <span className="text-purple-400 font-medium">Administrative Access</span>
+          </div>
+        </div>
+      </footer>
+    );
+  }
+
+  // 2. Independent Faculty / Instructor Portal Footer (One line)
+  if (pathname.startsWith('/instructor')) {
+    return (
+      <footer className="bg-[#05161c] text-slate-400 border-t border-white/10 py-3.5 px-4 text-xs mt-auto">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2 text-white font-semibold">
+            <SwitchLogo className="w-5 h-5" />
+            <span className="text-xs">Switch 1.0 Faculty Portal</span>
+          </div>
+          <div className="flex items-center gap-3 text-slate-400 text-[11px]">
+            <span>© {new Date().getFullYear()} Switch 1.0 Initiative. All rights reserved.</span>
+            <span>·</span>
+            <span className="text-amber-400 font-medium">Instructor Workstation</span>
+          </div>
+        </div>
+      </footer>
+    );
+  }
+
+  // 3. Student Dashboard Portal Footer
+  if (pathname.startsWith('/dashboard')) {
     return (
       <footer className="bg-[#071E26] text-slate-400 border-t border-white/10 py-6 px-4 text-xs mt-auto">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -46,17 +80,14 @@ export default function Footer() {
           </div>
 
           <div className="flex items-center gap-3 text-slate-400 text-[11px]">
-            <span className="flex items-center gap-1 text-emerald-400 font-medium">
-              <Lock className="w-3 h-3" />
-              <span>TLS 1.3 Encrypted Session</span>
-            </span>
-            <span>·</span>
-            <p>© {new Date().getFullYear()} Switch 1.0 Initiative.</p>
+            <p>© {new Date().getFullYear()} Switch 1.0 Initiative. All rights reserved.</p>
           </div>
         </div>
       </footer>
     );
   }
+
+  // 4. Main Public Landing Page Footer
   return (
     <footer className="bg-switch-dark text-slate-300 border-t border-white/10 pt-16 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -80,12 +111,6 @@ export default function Footer() {
             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-sm">
               Empowering Nigerian youth aged 15–40 with high-income tech professions and self-reliant vocational skills. Subsidized in partnership with <strong>GOFAMINT Youth Fellowship (GYF - Strong & Able)</strong>.
             </p>
-
-            {/* Security Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-slate-300">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>TLS 1.3 · Paystack PCI-DSS Level 1 Encrypted</span>
-            </div>
           </div>
 
           {/* Col 3: Tech Tracks */}
@@ -166,11 +191,6 @@ export default function Footer() {
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <p>© {new Date().getFullYear()} Switch 1.0 Empowerment Initiative. All rights reserved.</p>
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1 text-slate-400">
-              <Lock className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Zero-Trust Architecture</span>
-            </span>
-            <span>·</span>
             <span className="text-slate-400">Partnered with GYF (Strong & Able)</span>
           </div>
         </div>

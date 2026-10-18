@@ -54,10 +54,10 @@ export default function AdminPage() {
     fullName: '',
     email: '',
     phone: '',
-    password: 'Switch2026!',
+    password: '',
     trackId: TRACKS[0].id,
     bio: '',
-    experienceYears: 5,
+    experienceYears: 1,
   });
 
   const [actionNotice, setActionNotice] = useState<string | null>(null);
@@ -140,11 +140,11 @@ export default function AdminPage() {
 
   const handleAddInstructor = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newInstData.fullName || !newInstData.email) return;
+    if (!newInstData.fullName.trim() || !newInstData.email.trim() || !newInstData.password.trim()) return;
 
     setIsSubmittingInst(true);
     try {
-      const passToUse = newInstData.password.trim() || 'Switch2026!';
+      const passToUse = newInstData.password.trim();
       const created = await syncCreateInstructor({
         fullName: newInstData.fullName.trim(),
         email: newInstData.email.trim(),
@@ -152,8 +152,8 @@ export default function AdminPage() {
         trackId: newInstData.trackId,
         password: passToUse,
         bio: newInstData.bio.trim(),
-        experienceYears: Number(newInstData.experienceYears) || 3,
-        status: 'approved', // Method A: Admin directly provisions approved faculty
+        experienceYears: Number(newInstData.experienceYears) || 1,
+        status: 'approved',
       });
 
       const freshList = await syncFetchInstructors();
@@ -166,10 +166,10 @@ export default function AdminPage() {
         fullName: '',
         email: '',
         phone: '',
-        password: 'Switch2026!',
+        password: '',
         trackId: TRACKS[0].id,
         bio: '',
-        experienceYears: 5,
+        experienceYears: 1,
       });
       setTimeout(() => setActionNotice(null), 10000);
     } finally {
@@ -600,14 +600,13 @@ export default function AdminPage() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 uppercase mb-1 flex items-center justify-between">
-                    <span>Login Passcode</span>
-                    <span className="text-[10px] text-purple-600 font-bold lowercase">default: Switch2026!</span>
+                  <label className="block font-bold text-slate-700 uppercase mb-1">
+                    Login Passcode
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Switch2026!"
+                    placeholder="Enter secure passcode"
                     value={newInstData.password}
                     onChange={(e) => setNewInstData({ ...newInstData, password: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-600 text-slate-900 font-mono font-bold"
@@ -629,7 +628,7 @@ export default function AdminPage() {
               </div>
 
               <div className="p-3 bg-purple-50 rounded-xl border border-purple-200 text-purple-900 text-[11px] leading-relaxed">
-                <strong>Method A Active:</strong> The instructor will be provisioned directly with active approval. They can immediately log in at <code className="bg-purple-100 px-1 py-0.5 rounded text-purple-800 font-mono">/instructor/login</code> with the email and passcode specified above.
+                The instructor will be provisioned directly with active approval. They can immediately log in at <code className="bg-purple-100 px-1 py-0.5 rounded text-purple-800 font-mono">/instructor/login</code> with the email and passcode specified above.
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2">

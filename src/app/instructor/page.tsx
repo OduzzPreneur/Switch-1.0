@@ -820,7 +820,8 @@ function InstructorPortalContent() {
                                 type="number"
                                 min={0}
                                 max={100}
-                                defaultValue={sub.score || 95}
+                                placeholder="0-100"
+                                defaultValue={sub.score !== undefined ? sub.score : ''}
                                 onChange={(e) =>
                                   setGradingScores({
                                     ...gradingScores,
@@ -837,7 +838,8 @@ function InstructorPortalContent() {
                               </label>
                               <input
                                 type="text"
-                                defaultValue={sub.feedback || 'Excellent practical load audit calculation and component sizing.'}
+                                placeholder="Enter evaluation feedback for student..."
+                                defaultValue={sub.feedback || ''}
                                 onChange={(e) =>
                                   setGradingFeedbacks({
                                     ...gradingFeedbacks,

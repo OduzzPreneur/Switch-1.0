@@ -26,7 +26,6 @@ import {
   ChevronRight,
   Shield,
   Briefcase,
-  Sparkles,
 } from 'lucide-react';
 import SwitchLogo from '@/components/common/SwitchLogo';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
@@ -514,26 +513,6 @@ export default function Navbar() {
               })}
             </div>
 
-            {/* Prominent Registration CTA Card */}
-            <div className="p-4 bg-slate-900/40 space-y-2.5">
-              <div className="p-3.5 bg-gradient-to-br from-switch-teal/20 via-slate-900 to-[#071E26] rounded-2xl border border-switch-teal/30 space-y-2">
-                <div className="flex items-center gap-1.5 text-[11px] font-bold text-switch-teal">
-                  <Sparkles className="w-3.5 h-3.5 text-switch-orange" />
-                  <span>Cohort 1.0 Youth Enrollment Open</span>
-                </div>
-                <p className="text-[11px] text-slate-300 leading-snug">
-                  12 High-Income Tech & Vocational Disciplines. Subsidized token ₦5,000.
-                </p>
-                <Link
-                  href="/register"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-switch-orange to-orange-500 hover:from-switch-orange-600 hover:to-orange-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition-all"
-                >
-                  <span>Register for Cohort 1.0</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
 
             {/* Portal Gateways */}
             <div className="p-4 bg-[#05161c] space-y-2">
