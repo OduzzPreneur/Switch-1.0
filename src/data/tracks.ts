@@ -1,10 +1,22 @@
 import { CourseTrack } from '@/types';
 
+export const TRACK_ID_ALIASES: Record<string, string> = {
+  'software-engineering': 'web-development',
+  'solar-energy': 'solar-technology',
+  'data-ai-essentials': 'data-analyses',
+};
+
+export function findTrackById(id?: string): CourseTrack | undefined {
+  if (!id) return undefined;
+  const resolvedId = TRACK_ID_ALIASES[id] || id;
+  return TRACKS.find((t) => t.id === resolvedId);
+}
+
 export const TRACKS: CourseTrack[] = [
-  // --- TECH TRACKS (6) ---
+  // --- TECH TRACKS (7) ---
   {
-    id: 'software-engineering',
-    title: 'Software Engineering & Web Development',
+    id: 'web-development',
+    title: 'Web Development',
     category: 'Tech',
     tagline: 'Build scalable modern web applications and APIs from ground up.',
     description:
@@ -41,16 +53,35 @@ export const TRACKS: CourseTrack[] = [
     featured: true,
   },
   {
-    id: 'data-ai-essentials',
-    title: 'Data Analysis & AI Essentials',
+    id: 'cloud-ai-engineering',
+    title: 'Cloud Computing & AI Engineering',
     category: 'Tech',
-    tagline: 'Turn raw datasets into strategic intelligence and leverage AI workflows.',
+    tagline: 'Architect scalable cloud infrastructure and build generative AI-powered applications.',
     description:
-      'Learn data wrangling, SQL queries, interactive dashboards in PowerBI, Python analytics libraries, and prompt engineering with modern generative AI tooling.',
+      'Master cloud foundations (AWS/Azure), containerization with Docker, serverless architectures, and modern generative AI engineering. Learn to integrate LLM APIs, build RAG pipelines, and deploy resilient cloud services.',
     durationWeeks: 12,
-    skills: ['Data Cleaning', 'SQL Querying', 'Data Visualization', 'Business Intelligence', 'AI Prompt Engineering'],
-    toolsCovered: ['Excel Advanced', 'PowerBI', 'SQL', 'Python (Pandas/Matplotlib)', 'Claude & GPT APIs'],
-    careerRoles: ['Data Analyst', 'BI Associate', 'Operations Analyst'],
+    skills: ['Cloud Infrastructure', 'Docker & Containers', 'Generative AI & LLM APIs', 'Serverless Architecture', 'CI/CD & DevOps Basics'],
+    toolsCovered: ['AWS / Azure', 'Docker', 'Python', 'OpenAI & Claude APIs', 'LangChain', 'Terraform Basics'],
+    careerRoles: ['Cloud Support Associate', 'AI Solutions Engineer', 'Junior DevOps Specialist', 'Cloud Systems Admin'],
+    prerequisites: 'Basic programming concepts and a laptop with stable internet connection.',
+    colorScheme: {
+      accent: '#0C4A60',
+      badgeBg: 'bg-sky-50 text-sky-800 border-sky-200',
+      border: 'border-sky-500',
+    },
+    featured: true,
+  },
+  {
+    id: 'data-analyses',
+    title: 'Data Analyses',
+    category: 'Tech',
+    tagline: 'Turn raw datasets into strategic intelligence and automated business dashboards.',
+    description:
+      'Learn end-to-end data processing: data wrangling in Advanced Excel, database querying with SQL, interactive dashboards in PowerBI, Python analytics (Pandas, Matplotlib), and modern predictive analytics.',
+    durationWeeks: 12,
+    skills: ['Data Cleaning & ETL', 'SQL Querying', 'Interactive Dashboards', 'Business Intelligence', 'Predictive Modeling'],
+    toolsCovered: ['Excel Advanced', 'PowerBI', 'SQL (PostgreSQL)', 'Python (Pandas/Matplotlib)', 'Tableau Essentials'],
+    careerRoles: ['Data Analyst', 'Business Intelligence Associate', 'Operations Analyst', 'Reporting Specialist'],
     prerequisites: 'Basic math and logic; willingness to work with numbers.',
     colorScheme: {
       accent: '#0C4A60',
@@ -63,7 +94,7 @@ export const TRACKS: CourseTrack[] = [
     id: 'cybersecurity',
     title: 'Cybersecurity & Network Defense',
     category: 'Tech',
-    tagline: 'Protect digital assets, analyze vulnerabilities, and secure networks.',
+    tagline: 'Protect digital assets, analyze vulnerabilities, and secure enterprise networks.',
     description:
       'Gain hands-on knowledge in networking fundamentals, Linux commands, ethical hacking principles, threat modeling, vulnerability scanning, and security compliance.',
     durationWeeks: 12,
@@ -79,46 +110,86 @@ export const TRACKS: CourseTrack[] = [
     featured: true,
   },
   {
-    id: 'digital-marketing',
-    title: 'Digital Marketing & Growth',
+    id: 'cisco-networking',
+    title: 'Cisco Networking Academic Training',
     category: 'Tech',
-    tagline: 'Drive customer acquisition through search, social advertising, and content.',
+    tagline: 'Configure enterprise routers, switches, IP routing protocols, and prepare for CCNA.',
     description:
-      'Execute paid performance marketing (Meta & Google Ads), SEO, content funnels, email automation, analytics attribution, and brand storytelling.',
+      'Comprehensive Cisco Academy-aligned curriculum covering IPv4/IPv6 addressing, routing protocols (OSPF, EIGRP), VLAN segmentation, access control lists (ACLs), switch security, and enterprise network troubleshooting.',
+    durationWeeks: 12,
+    skills: ['IPv4/IPv6 Subnetting', 'Routing Protocols (OSPF/EIGRP)', 'VLAN & Trunking Protocols', 'Switch Port Security & ACLs', 'Network Diagnostics & Packet Analysis'],
+    toolsCovered: ['Cisco Packet Tracer', 'GNS3', 'Wireshark', 'Cisco IOS CLI', 'Putty / Terminal'],
+    careerRoles: ['Network Support Engineer', 'Cisco Network Administrator', 'NOC Associate', 'IT Infrastructure Specialist'],
+    prerequisites: 'Basic computer literacy and interest in telecommunications & networks.',
+    colorScheme: {
+      accent: '#0C4A60',
+      badgeBg: 'bg-blue-50 text-blue-800 border-blue-200',
+      border: 'border-blue-500',
+    },
+    featured: false,
+  },
+  {
+    id: 'robotics',
+    title: 'Robotics',
+    category: 'Tech',
+    tagline: 'Design, program, and build intelligent robots, microcontrollers, and automated systems.',
+    description:
+      'Practical hardware and embedded software engineering: microcontroller programming (Arduino, ESP32, Raspberry Pi), sensor integration, motor actuation, circuit prototyping, and autonomous robotic control logic.',
+    durationWeeks: 10,
+    skills: ['Microcontroller Programming', 'Sensor Interfacing & Telemetry', 'Motor Drivers & Actuators', 'Circuit Prototyping & Soldering', 'Autonomous Control Algorithms'],
+    toolsCovered: ['Arduino IDE', 'Raspberry Pi / ESP32', 'Tinkercad', 'Soldering Stations', 'Digital Multimeters', 'Servo Motors'],
+    careerRoles: ['Robotics Technician', 'Embedded Systems Associate', 'Automation Specialist', 'Hardware Prototyper'],
+    prerequisites: 'Analytical curiosity, interest in hardware and software synergy, and a laptop.',
+    colorScheme: {
+      accent: '#FF5E14',
+      badgeBg: 'bg-indigo-50 text-indigo-800 border-indigo-200',
+      border: 'border-indigo-500',
+    },
+    featured: false,
+  },
+
+  // --- VOCATIONAL TRACKS (5) ---
+  {
+    id: 'graphic-design',
+    title: 'Graphic Design',
+    category: 'Vocational',
+    tagline: 'Master brand identity, commercial visual graphics, typography, and advertising media.',
+    description:
+      'Learn commercial design principles: logo creation, brand identity systems, typography, vector illustration, commercial advertising materials, social media graphics, and print production techniques.',
     durationWeeks: 8,
-    skills: ['Performance Marketing', 'SEO & Copywriting', 'Social Media Strategy', 'Email Marketing Automations', 'Ad Analytics'],
-    toolsCovered: ['Meta Ads Manager', 'Google Analytics 4', 'Mailchimp', 'Canva', 'SEMrush'],
-    careerRoles: ['Digital Marketer', 'Growth Specialist', 'Social Media Strategist'],
-    prerequisites: 'Passion for communication, creativity, and brand building.',
+    skills: ['Brand Identity & Logo Design', 'Typography & Visual Hierarchy', 'Vector Art & Illustration', 'Social Media & Ad Creative Design', 'Print Prepress & Production'],
+    toolsCovered: ['Adobe Photoshop', 'Adobe Illustrator', 'Canva Pro', 'InDesign Essentials', 'Figma for Graphics'],
+    careerRoles: ['Graphic Designer', 'Brand Identity Specialist', 'Creative Visual Designer', 'Freelance Commercial Artist'],
+    prerequisites: 'Visual curiosity, eye for aesthetics, and a computer with graphic capabilities.',
     colorScheme: {
       accent: '#FF5E14',
       badgeBg: 'bg-orange-50 text-orange-800 border-orange-200',
       border: 'border-orange-500',
     },
+    featured: false,
   },
   {
-    id: 'product-management',
-    title: 'Product Management & Tech Operations',
-    category: 'Tech',
-    tagline: 'Lead products from ideation to launch using Agile & Scrum workflows.',
+    id: 'fashion-design',
+    title: 'Fashion Design and Creative Apparel',
+    category: 'Vocational',
+    tagline: 'Pattern drafting, couture tailoring, garment construction, and apparel branding.',
     description:
-      'Develop roadmaps, define PRDs (Product Requirement Documents), coordinate cross-functional engineering and design teams, and optimize product-market fit.',
-    durationWeeks: 10,
-    skills: ['Agile & Scrum Methodologies', 'Product Roadmapping', 'User Story Mapping', 'Stakeholder Management', 'Go-To-Market Strategy'],
-    toolsCovered: ['Jira', 'Trello', 'Miro', 'Mixpanel', 'Slack & Notion'],
-    careerRoles: ['Associate Product Manager', 'Product Owner', 'Scrum Master'],
-    prerequisites: 'Strong organizational skills and verbal/written communication.',
+      'From sketching concepts to pattern drafting, cutting, precision stitching, dart manipulation, zipper insertion, and commercial clothing production for men & women.',
+    durationWeeks: 12,
+    skills: ['Pattern Drafting & Cutting', 'Industrial Sewing Machine Operation', 'Garment Assembly & Finishing', 'Fabric Selection', 'Fashion Entrepreneurship'],
+    toolsCovered: ['Industrial Straight Stitch Machines', 'Overlocking/Sergers', 'French Curves', 'Measuring Tapes', 'Steam Irons'],
+    careerRoles: ['Fashion Designer', 'Custom Tailor', 'Apparel Brand Owner'],
+    prerequisites: 'Creativity, eye for style, and dedication to hands-on craftsmanship.',
     colorScheme: {
-      accent: '#0C4A60',
-      badgeBg: 'bg-teal-50 text-teal-800 border-teal-200',
-      border: 'border-teal-500',
+      accent: '#FF5E14',
+      badgeBg: 'bg-rose-50 text-rose-800 border-rose-200',
+      border: 'border-rose-200',
     },
+    featured: true,
   },
-
-  // --- VOCATIONAL TRACKS (6) ---
   {
-    id: 'solar-energy',
-    title: 'Solar Energy & Inverter Systems',
+    id: 'solar-technology',
+    title: 'Solar and Inverter Technology',
     category: 'Vocational',
     tagline: 'Design, size, install, and maintain commercial & residential solar power.',
     description:
@@ -136,26 +207,27 @@ export const TRACKS: CourseTrack[] = [
     featured: true,
   },
   {
-    id: 'electrical-wiring',
-    title: 'Electrical Wiring & Building Automation',
+    id: 'agriculture-hydroponics',
+    title: 'Agriculture and Hydroponics',
     category: 'Vocational',
-    tagline: 'Safe electrical conduit wiring, distribution boards, and smart home controls.',
+    tagline: 'Modern soilless farming, nutrient film hydroponic systems, greenhouse setups, and agribusiness.',
     description:
-      'Practical training in domestic and industrial wiring standards, circuit breakers, conduit piping, earthing systems, smart switches, and electrical safety codes.',
+      'Master sustainable modern farming: hydroponic systems (NFT, DWC, Dutch buckets), nutrient solution formulation, pH/EC monitoring, climate-controlled greenhouse setups, crop propagation, and commercial agribusiness marketing.',
     durationWeeks: 8,
-    skills: ['Single & 3-Phase Wiring', 'Distribution Board (DB) Dressing', 'Smart Switch & IoT Relays', 'Circuit Protection', 'Fault Tracing'],
-    toolsCovered: ['Insulated Pliers', 'Voltage Testers', 'Conduit Benders', 'Wire Strippers', 'Meggers'],
-    careerRoles: ['Certified Electrician', 'Building Wiring Contractor', 'Smart Automation Installer'],
-    prerequisites: 'Safety-first mindset and attention to detail.',
+    skills: ['Hydroponic System Construction', 'Nutrient Solution & pH/EC Balancing', 'Greenhouse & Drip Irrigation Setup', 'Seedling Propagation & Soilless Media', 'Agribusiness Financial Modeling & Produce Sales'],
+    toolsCovered: ['Digital pH & EC Pens', 'Submersible Pumps & PVC Systems', 'Grow Media (Coco Coir/Perlite)', 'Water Test Kits', 'Greenhouse Netting'],
+    careerRoles: ['Hydroponic Farm Manager', 'Modern Agribusiness Entrepreneur', 'Urban Farm Specialist', 'Greenhouse Project Lead'],
+    prerequisites: 'Passion for farming innovation, sustainable food security, and hands-on outdoor/greenhouse learning.',
     colorScheme: {
       accent: '#0C4A60',
-      badgeBg: 'bg-blue-50 text-blue-800 border-blue-200',
-      border: 'border-blue-500',
+      badgeBg: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+      border: 'border-emerald-500',
     },
+    featured: true,
   },
   {
     id: 'cctv-iot',
-    title: 'CCTV, IoT & Smart Security Systems',
+    title: 'CCTV, IOT & Smart Security Systems',
     category: 'Vocational',
     tagline: 'Install IP/Analogue surveillance, biometrics, alarms, and access control.',
     description:
@@ -171,60 +243,6 @@ export const TRACKS: CourseTrack[] = [
       border: 'border-teal-500',
     },
     featured: true,
-  },
-  {
-    id: 'fashion-design',
-    title: 'Fashion Design & Creative Apparel',
-    category: 'Vocational',
-    tagline: 'Pattern drafting, couture tailoring, garment construction, and apparel branding.',
-    description:
-      'From sketching concepts to pattern drafting, cutting, precision stitching, dart manipulation, zipper insertion, and commercial clothing production for men & women.',
-    durationWeeks: 12,
-    skills: ['Pattern Drafting & Cutting', 'Industrial Sewing Machine Operation', 'Garment Assembly & Finishing', 'Fabric Selection', 'Fashion Entrepreneurship'],
-    toolsCovered: ['Industrial Straight Stitch Machines', 'Overlocking/Sergers', 'French Curves', 'Measuring Tapes', 'Steam Irons'],
-    careerRoles: ['Fashion Designer', 'Custom Tailor', 'Apparel Brand Owner'],
-    prerequisites: 'Creativity, eye for style, and dedication to hands-on craftsmanship.',
-    colorScheme: {
-      accent: '#FF5E14',
-      badgeBg: 'bg-rose-50 text-rose-800 border-rose-200',
-      border: 'border-rose-200',
-    },
-  },
-  {
-    id: 'media-production',
-    title: 'Media Production & Visual Graphics',
-    category: 'Vocational',
-    tagline: 'Camera operation, video editing, branding graphics, and motion design.',
-    description:
-      'Practical training in camera cinematography, three-point lighting, audio recording, Adobe Premiere / DaVinci Resolve editing, thumbnail and branding design.',
-    durationWeeks: 8,
-    skills: ['Camera & Lighting Setup', 'Audio Recording & Lav Mics', 'Video Color Grading & Montage', 'Brand Graphic Design', 'Social Video Formatting'],
-    toolsCovered: ['Premiere Pro', 'DaVinci Resolve', 'Photoshop', 'Gimbal Stabilizers', 'Wireless Microphones'],
-    careerRoles: ['Video Editor', 'Content Videographer', 'Media Director'],
-    prerequisites: 'Visual curiosity and passion for storytelling.',
-    colorScheme: {
-      accent: '#FF5E14',
-      badgeBg: 'bg-orange-50 text-orange-800 border-orange-200',
-      border: 'border-orange-500',
-    },
-  },
-  {
-    id: 'catering-craft',
-    title: 'Professional Catering & Confectionery Craft',
-    category: 'Vocational',
-    tagline: 'Commercial baking, pastry production, event catering, and food business setup.',
-    description:
-      'Learn gourmet pastry baking, cake decoration, finger foods & small chops, healthy culinary meals, food sanitation standards, costing, and catering event management.',
-    durationWeeks: 8,
-    skills: ['Pastry & Bread Baking', 'Cake Artistry & Fondant', 'Finger Foods (Small Chops)', 'Kitchen Hygiene & Food Safety', 'Menu Costing & Catering Logistics'],
-    toolsCovered: ['Commercial Mixers', 'Baking Ovens', 'Piping Sets', 'Chafing Dishes', 'Digital Scales'],
-    careerRoles: ['Professional Baker', 'Event Caterer', 'Culinary Entrepreneur'],
-    prerequisites: 'Love for cooking/baking and strict adherence to cleanliness.',
-    colorScheme: {
-      accent: '#FF5E14',
-      badgeBg: 'bg-yellow-50 text-yellow-800 border-yellow-200',
-      border: 'border-yellow-500',
-    },
   },
 ];
 

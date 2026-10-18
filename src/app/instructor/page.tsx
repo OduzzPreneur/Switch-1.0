@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { TRACKS } from '@/data/tracks';
+import { TRACKS, findTrackById } from '@/data/tracks';
 import {
   getInstructors,
   getAttendanceRecords,
@@ -183,7 +183,7 @@ function InstructorPortalContent() {
   };
 
   const isApproved = currentInstructor?.status === 'approved';
-  const assignedTrack = TRACKS.find((t) => t.id === currentInstructor?.trackId) || TRACKS[0];
+  const assignedTrack = findTrackById(currentInstructor?.trackId) || TRACKS[0];
 
   // 1. Submit Attendance Handler with live Supabase sync
   const handleSaveAttendance = async (e: React.FormEvent) => {

@@ -55,7 +55,7 @@ export default function TracksDirectory() {
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
-              All 12 Tracks
+              All {TRACKS.length} Tracks
             </button>
             <button
               onClick={() => setSelectedCategory('Tech')}
@@ -66,7 +66,7 @@ export default function TracksDirectory() {
               }`}
             >
               <Laptop className="w-3.5 h-3.5 text-switch-orange" />
-              Tech Tracks (6)
+              Tech Tracks ({TRACKS.filter((t) => t.category === 'Tech').length})
             </button>
             <button
               onClick={() => setSelectedCategory('Vocational')}
@@ -77,7 +77,7 @@ export default function TracksDirectory() {
               }`}
             >
               <Wrench className="w-3.5 h-3.5 text-switch-orange" />
-              Vocational Trades (6)
+              Vocational Trades ({TRACKS.filter((t) => t.category === 'Vocational').length})
             </button>
           </div>
 

@@ -67,7 +67,7 @@ const DEFAULT_INSTRUCTORS: Instructor[] = [
     fullName: 'Engr. Babatunde Alabi',
     email: 'babatunde.alabi@switch.ng',
     phone: '+234 803 123 4567',
-    trackId: 'solar-energy',
+    trackId: 'solar-technology',
     status: 'approved',
     bio: 'Lead Renewable Energy Engineer with 11+ years practical field experience deploying hybrid mini-grids and commercial PV systems.',
     experienceYears: 11,
@@ -79,7 +79,7 @@ const DEFAULT_INSTRUCTORS: Instructor[] = [
     fullName: 'Chioma Okonkwo',
     email: 'chioma.okonkwo@switch.ng',
     phone: '+234 812 987 6543',
-    trackId: 'software-engineering',
+    trackId: 'web-development',
     status: 'approved',
     bio: 'Principal Fullstack Engineer specializing in Next.js, Node.js, distributed microservices and fintech architecture.',
     experienceYears: 8,
@@ -113,7 +113,7 @@ const DEFAULT_INSTRUCTORS: Instructor[] = [
 const DEFAULT_ASSESSMENTS: Assessment[] = [
   {
     id: 'asm-1',
-    trackId: 'solar-energy',
+    trackId: 'solar-technology',
     weekNumber: 1,
     title: 'Lab 1: PV Array & Battery Bank Load Audit',
     type: 'Practical Lab',
@@ -125,7 +125,7 @@ const DEFAULT_ASSESSMENTS: Assessment[] = [
   },
   {
     id: 'asm-2',
-    trackId: 'solar-energy',
+    trackId: 'solar-technology',
     weekNumber: 2,
     title: 'Lab 2: Charge Controller & Earthing Safety Specs',
     type: 'Practical Lab',
@@ -137,7 +137,7 @@ const DEFAULT_ASSESSMENTS: Assessment[] = [
   },
   {
     id: 'asm-3',
-    trackId: 'software-engineering',
+    trackId: 'web-development',
     weekNumber: 1,
     title: 'Lab 1: Git Workflow & Responsive Semantic Layout',
     type: 'Practical Lab',
@@ -169,7 +169,7 @@ const DEFAULT_SUBMISSIONS: AssessmentSubmission[] = [
 const DEFAULT_ATTENDANCE: AttendanceRecord[] = [
   {
     id: 'att-1',
-    trackId: 'solar-energy',
+    trackId: 'solar-technology',
     sessionDate: '2026-10-11',
     sessionWeek: 1,
     sessionTitle: 'Orientation & Solar Fundamentals',
@@ -181,7 +181,7 @@ const DEFAULT_ATTENDANCE: AttendanceRecord[] = [
   },
   {
     id: 'att-2',
-    trackId: 'solar-energy',
+    trackId: 'solar-technology',
     sessionDate: '2026-10-12',
     sessionWeek: 1,
     sessionTitle: 'Photovoltaic Physics & Cell Chemistries',

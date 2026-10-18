@@ -99,8 +99,8 @@ CREATE POLICY "Public read for submissions"
 
 -- 5. Seed Initial Approved Instructors (if not already present)
 INSERT INTO public.instructors (id, full_name, email, phone, track_id, status, bio, experience_years, approved_at) VALUES
-('inst-1', 'Engr. Babatunde Alabi', 'babatunde.alabi@switch.ng', '+234 803 123 4567', 'solar-energy', 'approved', 'Lead Renewable Energy Engineer with 11+ years practical field experience deploying hybrid mini-grids and commercial PV systems.', 11, NOW()),
-('inst-2', 'Chioma Okonkwo', 'chioma.okonkwo@switch.ng', '+234 802 987 6543', 'software-engineering', 'approved', 'Senior Fullstack Software Architect specializing in React, Next.js, and cloud microservices.', 8, NOW()),
+('inst-1', 'Engr. Babatunde Alabi', 'babatunde.alabi@switch.ng', '+234 803 123 4567', 'solar-technology', 'approved', 'Lead Renewable Energy Engineer with 11+ years practical field experience deploying hybrid mini-grids and commercial PV systems.', 11, NOW()),
+('inst-2', 'Chioma Okonkwo', 'chioma.okonkwo@switch.ng', '+234 802 987 6543', 'web-development', 'approved', 'Senior Fullstack Software Architect specializing in React, Next.js, and cloud microservices.', 8, NOW()),
 ('inst-3', 'Oluwaseun Adeleke', 'oluwaseun.adeleke@switch.ng', '+234 805 456 7890', 'uiux-design', 'pending', 'Lead UX Researcher & Product Architect, certified Design Sprint facilitator.', 6, NULL),
 ('inst-4', 'Ibrahim Danladi', 'ibrahim.danladi@switch.ng', '+234 809 333 2211', 'cybersecurity', 'pending', 'Certified Ethical Hacker (CEH) and SOC analyst focused on enterprise defensive posture.', 5, NULL)
 ON CONFLICT (email) DO NOTHING;

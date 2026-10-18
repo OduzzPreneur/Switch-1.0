@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { TRACKS } from '@/data/tracks';
+import { TRACKS, findTrackById } from '@/data/tracks';
 import {
   getInstructors,
   getAttendanceRecords,
@@ -375,7 +375,7 @@ export default function AdminPage() {
                   </div>
                 ) : (
                   filteredInstructors.map((inst) => {
-                    const trackObj = TRACKS.find((t) => t.id === inst.trackId);
+                    const trackObj = findTrackById(inst.trackId);
                     const isApproved = inst.status === 'approved';
                     const isPending = inst.status === 'pending';
 
@@ -488,7 +488,7 @@ export default function AdminPage() {
                         Reg ID: <strong className="font-mono text-switch-teal">{student?.registrationNumber}</strong> · {student?.email}
                       </div>
                       <div className="text-slate-600 mt-0.5">
-                        Track: <strong>{TRACKS.find((t) => t.id === student?.trackId)?.title}</strong> ({student?.learningMode})
+                        Track: <strong>{findTrackById(student?.trackId)?.title}</strong> ({student?.learningMode})
                       </div>
                     </div>
                   </div>

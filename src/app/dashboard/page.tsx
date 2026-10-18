@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { TRACKS } from '@/data/tracks';
+import { TRACKS, findTrackById } from '@/data/tracks';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import {
   getOrInitDefaultStudent,
@@ -288,7 +288,7 @@ function DashboardContent() {
     );
   }
 
-  const enrolledTrack = TRACKS.find((t) => t.id === student?.trackId) || TRACKS[0];
+  const enrolledTrack = findTrackById(student?.trackId) || TRACKS[0];
   const firstName = student.fullName ? student.fullName.split(' ')[0] : 'Fellow';
 
   return (

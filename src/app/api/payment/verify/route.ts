@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       ageBracket: studentData?.ageBracket || meta.ageBracket || '21-25',
       gender: studentData?.gender || meta.gender || 'Prefer not to say',
       stateOfResidence: studentData?.stateOfResidence || meta.stateOfResidence || 'Lagos',
-      trackId: studentData?.trackId || meta.trackId || 'software-engineering',
+      trackId: studentData?.trackId || meta.trackId || 'web-development',
       learningMode: studentData?.learningMode || meta.learningMode || 'Online / Virtual',
       highestEducation: studentData?.highestEducation || meta.highestEducation || '',
       registrationNumber,
