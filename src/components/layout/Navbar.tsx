@@ -26,6 +26,8 @@ import {
   ChevronRight,
   Shield,
   Briefcase,
+  MapPin,
+  Sparkles,
 } from 'lucide-react';
 import SwitchLogo from '@/components/common/SwitchLogo';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
@@ -259,42 +261,147 @@ export default function Navbar() {
                   <div className="relative">
                     <button
                       onClick={() => setNotificationsOpen(!notificationsOpen)}
-                      className="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 relative transition-colors"
+                      className={`p-2 rounded-xl transition-colors relative ${
+                        notificationsOpen
+                          ? 'bg-switch-teal text-white'
+                          : 'text-slate-300 hover:text-white hover:bg-white/10'
+                      }`}
                       aria-label="View notifications"
                     >
                       <Bell className="w-5 h-5" />
                       <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-switch-orange animate-pulse" />
                     </button>
 
-                    {/* Notification Dropdown */}
+                    {/* Notification Dropdown & Backdrop */}
                     {notificationsOpen && (
-                      <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white text-slate-800 rounded-2xl shadow-2xl border border-slate-200 p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                          <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                            Cohort 1.0 Announcements
-                          </h4>
-                          <span className="text-[10px] bg-teal-50 text-switch-teal font-bold px-2 py-0.5 rounded-full border border-teal-200">
-                            2 New
-                          </span>
-                        </div>
-                        <div className="py-2 space-y-2 text-xs">
-                          <div className="p-2.5 rounded-xl bg-slate-50 hover:bg-teal-50/60 border border-slate-100 transition-colors">
-                            <span className="text-[10px] font-bold text-switch-teal block">Center Allocation</span>
-                            <p className="text-slate-700 font-medium mt-0.5">Physical centers and virtual live stream links now populated in Timetable & Venues.</p>
-                          </div>
-                          <div className="p-2.5 rounded-xl bg-slate-50 hover:bg-teal-50/60 border border-slate-100 transition-colors">
-                            <span className="text-[10px] font-bold text-switch-orange block">Assessment 1 Released</span>
-                            <p className="text-slate-700 font-medium mt-0.5">Course instructor published Practical Lab 1 load audit specifications.</p>
-                          </div>
-                        </div>
-                        <Link
-                          href="/dashboard?tab=timetable"
+                      <>
+                        {/* Backdrop Scrim for outside clicks */}
+                        <div
+                          className="fixed inset-0 z-40 bg-slate-950/20 backdrop-blur-[1px]"
                           onClick={() => setNotificationsOpen(false)}
-                          className="block text-center text-[11px] font-bold text-switch-teal hover:underline pt-2 border-t border-slate-100"
-                        >
-                          View all session updates
-                        </Link>
-                      </div>
+                          aria-hidden="true"
+                        />
+
+                        {/* Dropdown Panel: Fixed centered on mobile, right-anchored on desktop */}
+                        <div className="fixed left-3 right-3 top-[68px] z-50 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[380px] bg-white text-slate-800 rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+                          {/* Header */}
+                          <div className="flex items-center justify-between p-3.5 sm:p-4 border-b border-slate-100 bg-slate-50/80">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-lg bg-switch-teal/10 flex items-center justify-center text-switch-teal">
+                                <Bell className="w-4 h-4 text-switch-teal" />
+                              </div>
+                              <div>
+                                <h4 className="text-xs font-bold text-slate-900 leading-tight">
+                                  Notifications
+                                </h4>
+                                <span className="text-[10px] text-slate-500 font-medium">Cohort 1.0 Updates</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] bg-teal-50 text-switch-teal font-bold px-2 py-0.5 rounded-full border border-teal-200">
+                                3 Updates
+                              </span>
+                              <button
+                                onClick={() => setNotificationsOpen(false)}
+                                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors"
+                                aria-label="Close notifications"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Scrollable Notification List */}
+                          <div className="max-h-[60vh] sm:max-h-[380px] overflow-y-auto divide-y divide-slate-100 text-xs">
+                            {/* Item 1 */}
+                            <Link
+                              href="/dashboard?tab=timetable"
+                              onClick={() => setNotificationsOpen(false)}
+                              className="p-3.5 flex items-start gap-3 hover:bg-slate-50 transition-colors block"
+                            >
+                              <div className="w-8 h-8 rounded-xl bg-teal-50 text-switch-teal flex items-center justify-center shrink-0 mt-0.5">
+                                <MapPin className="w-4 h-4 text-switch-teal" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1 mb-0.5">
+                                  <span className="text-[10px] font-bold text-switch-teal uppercase tracking-wider">
+                                    Timetable & Hubs
+                                  </span>
+                                  <span className="text-[10px] text-slate-400">Active</span>
+                                </div>
+                                <h5 className="font-bold text-slate-900 text-xs leading-snug">
+                                  Physical Center & Online Schedule Ready
+                                </h5>
+                                <p className="text-slate-600 text-[11px] mt-1 leading-relaxed">
+                                  Regional practical center allocations and live theory links are now available in your timetable.
+                                </p>
+                              </div>
+                            </Link>
+
+                            {/* Item 2 */}
+                            <Link
+                              href="/dashboard?tab=assessments"
+                              onClick={() => setNotificationsOpen(false)}
+                              className="p-3.5 flex items-start gap-3 hover:bg-slate-50 transition-colors block"
+                            >
+                              <div className="w-8 h-8 rounded-xl bg-orange-50 text-switch-orange flex items-center justify-center shrink-0 mt-0.5">
+                                <FileCheck2 className="w-4 h-4 text-switch-orange" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1 mb-0.5">
+                                  <span className="text-[10px] font-bold text-switch-orange uppercase tracking-wider">
+                                    Coursework
+                                  </span>
+                                  <span className="text-[10px] text-slate-400">Lab 1</span>
+                                </div>
+                                <h5 className="font-bold text-slate-900 text-xs leading-snug">
+                                  Practical Lab 1 Assessment Released
+                                </h5>
+                                <p className="text-slate-600 text-[11px] mt-1 leading-relaxed">
+                                  Review your track specifications, complete your practical project, and submit for instructor scoring.
+                                </p>
+                              </div>
+                            </Link>
+
+                            {/* Item 3 */}
+                            <Link
+                              href="/dashboard/profile"
+                              onClick={() => setNotificationsOpen(false)}
+                              className="p-3.5 flex items-start gap-3 hover:bg-slate-50 transition-colors block"
+                            >
+                              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                                <Sparkles className="w-4 h-4 text-emerald-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1 mb-0.5">
+                                  <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">
+                                    Verification
+                                  </span>
+                                  <span className="text-[10px] text-slate-400">Pass</span>
+                                </div>
+                                <h5 className="font-bold text-slate-900 text-xs leading-snug">
+                                  Official Registration Slip
+                                </h5>
+                                <p className="text-slate-600 text-[11px] mt-1 leading-relaxed">
+                                  Download your official biometric entry slip in your profile to present at center check-in.
+                                </p>
+                              </div>
+                            </Link>
+                          </div>
+
+                          {/* Footer */}
+                          <div className="p-3 bg-slate-50 border-t border-slate-100 text-center">
+                            <Link
+                              href="/dashboard?tab=timetable"
+                              onClick={() => setNotificationsOpen(false)}
+                              className="inline-flex items-center gap-1.5 text-xs font-bold text-switch-teal hover:text-switch-orange transition-colors"
+                            >
+                              <span>View All Sessions & Notices</span>
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </Link>
+                          </div>
+                        </div>
+                      </>
                     )}
                   </div>
 

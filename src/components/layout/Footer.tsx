@@ -177,11 +177,6 @@ export default function Footer() {
                   Program FAQs
                 </Link>
               </li>
-              <li>
-                <Link href="/coming-soon?module=Assessments" className="hover:text-white transition-colors">
-                  Assessments Portal (Soon)
-                </Link>
-              </li>
             </ul>
           </div>
 

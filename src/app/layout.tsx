@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import InstallAppPrompt from '@/components/common/InstallAppPrompt';
 
 export const metadata: Metadata = {
   title: 'Switch 1.0 | Youth Tech & Vocational Empowerment Platform',
@@ -50,6 +51,9 @@ export default function RootLayout({
 
         {/* Global Footer */}
         <Footer />
+
+        {/* PWA / Add-to-Home-Screen Install Banner */}
+        <InstallAppPrompt />
       </body>
     </html>
   );
